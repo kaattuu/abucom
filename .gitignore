@@ -1,0 +1,23 @@
+# Virtual environment
+.venv/
+env/
+venv/
+ENV/
+
+# Environment secrets
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# distribusi & egg
+*.egg-info/
+dist/
+build/
+
+# IDE files
+.vscode/
+.idea/
