@@ -27,3 +27,28 @@ def show_register_menu() -> None:
     
     print("="*30)
     input("\nTekan Enter untuk kembali ke menu utama...")
+
+def show_login_menu() -> None:
+    """
+    UI Terminal untuk alur login user.
+    """
+    print("\n" + "="*30)
+    print("      FORM LOGIN USER")
+    print("="*30)
+    
+    username = input("Username : ")
+    password = input("Password : ")
+    
+    print("\nSedang memproses autentikasi...")
+    
+    # Memanggil Service Layer
+    result = users_service.authenticate_user(username, password)
+    
+    if result['success']:
+        print(f"\n[SUKSES] {result['message']}")
+        print(f"Token JWT: {result['data']['token']}")
+    else:
+        print(f"\n[GAGAL] {result['message']}")
+    
+    print("="*30)
+    input("\nTekan Enter untuk kembali ke menu utama...")

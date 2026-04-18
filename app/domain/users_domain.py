@@ -33,3 +33,15 @@ def validate_password(password: str) -> ValidationResponse:
         return {'is_valid': False, 'message': 'Password minimal harus 6 karakter.'}
     
     return {'is_valid': True, 'message': ''}
+
+def validate_login_input(identity: str, password: str) -> ValidationResponse:
+    """
+    Validasi aturan bisnis dasar untuk input login.
+    """
+    if not identity or identity.strip() == "":
+        return {'is_valid': False, 'message': 'Username tidak boleh kosong.'}
+    
+    if not password or password.strip() == "":
+        return {'is_valid': False, 'message': 'Password tidak boleh kosong.'}
+    
+    return {'is_valid': True, 'message': ''}
