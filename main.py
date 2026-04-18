@@ -18,7 +18,7 @@ def show_main_menu():
     if choice == '1':
         users_cli.show_register_menu()
     elif choice == '2':
-        print("\n[INFO] Fitur Login sedang dalam pengembangan.")
+        users_cli.show_login_menu()
     elif choice == '3':
         print("\nTerima kasih telah menggunakan Abucom. Sampai jumpa!")
         sys.exit(0)

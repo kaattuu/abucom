@@ -61,3 +61,47 @@ def register_user(username: str, password: str) -> ServiceResponse:
     finally:
         # 6. Pastikan koneksi selalu ditutup (Core Layer)
         db.close_connection(conn)
+
+def authenticate_user(username: str, password: str) -> ServiceResponse:
+    """
+    Orkestrasi alur login user:
+    Validasi -> Ambil Data -> Verifikasi Hash -> Generate Token.
+    """
+    # 1. Validasi Domain (Pure Logic)
+    val = users_domain.validate_login_input(username, password)
+    if not val['is_valid']:
+        return {'success': False, 'message': val['message'], 'data': None}
+    
+    # 2. Persiapan Koneksi Database
+    app_config = config.get_config()
+    conn = db.create_connection(app_config['db'])
+    
+    if not conn:
+        return {'success': False, 'message': 'Gagal terhubung ke database.', 'data': None}
+    
+    try:
+        # 3. Ambil data user dari database (Data Layer)
+        user = users_data.find_user_by_username(conn, username)
+        if not user:
+            return {'success': False, 'message': 'Username atau password salah.', 'data': None}
+        
+        # 4. Verifikasi Password (Core Layer)
+        if not security.verify_password(password, user['password']):
+            return {'success': False, 'message': 'Username atau password salah.', 'data': None}
+        
+        # 5. Generate Token (Core Layer)
+        token_data = {'id': user['id'], 'username': user['username']}
+        token = security.create_token(token_data, app_config['jwt_secret'])
+        
+        return {
+            'success': True,
+            'message': 'Login berhasil!',
+            'data': {'token': token}
+        }
+        
+    except Exception as e:
+        return {'success': False, 'message': f'System Error: {str(e)}', 'data': None}
+    
+    finally:
+        # 6. Pastikan koneksi selalu ditutup (Core Layer)
+        db.close_connection(conn)
