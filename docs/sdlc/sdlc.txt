@@ -3,7 +3,7 @@ sdlc/
 ├── 01_planning/
 │   │
 │   ├── 01_project_charter.md              [dokumen_utama]    status: [finish]
-│   ├── 02_feasibility_study.md            [dokumen_utama]    status: [done]
+│   ├── 02_feasibility_study.md            [dokumen_utama]    status: [finish]
 │   ├── 03_stakeholder_register.md         [dokumen_utama]    status: [check]
 │   ├── 04_tech_stack_decision.md          [dokumen_utama]    status: [check]
 │   └── 05_innovation_proposal.md          [dokumen_utama]    status: [check]
