@@ -1,0 +1,53 @@
+sdlc/
+│
+├── 01_planning/
+│   │
+│   ├── 01_project_charter.md              [dokumen_utama]    status: [check]
+│   ├── 02_feasibility_study.md            [dokumen_utama]    status: [check]
+│   ├── 03_stakeholder_register.md         [dokumen_utama]    status: [check]
+│   ├── 04_tech_stack_decision.md          [dokumen_utama]    status: [check]
+│   └── 05_innovation_proposal.md          [dokumen_utama]    status: [check]
+│
+├── 02_analysis/
+│   │
+│   ├── 01_business_requirements.md        [dokumen_utama]    status: [check]
+│   ├── 02_software_requirements.md        [dokumen_utama]    status: [check]
+│   ├── 03_use_case_diagram.puml           [dokumen_utama]    status: [check]
+│   ├── 04_workflow_diagram.puml           [dokumen_utama]    status: [check]
+│   ├── 05_data_dictionary.md              [dokumen_utama]    status: [check]
+│   └── 06_access_control_matrix.md        [dokumen_utama]    status: [check]
+│
+├── 03_design/
+│   │
+│   ├── 01_database_schema.sql             [dokumen_utama]    status: [check]
+│   ├── 02_erd_database.puml               [dokumen_utama]    status: [check]
+│   ├── 03_system_architecture.md          [dokumen_utama]    status: [check]
+│   ├── 04_cli_interaction_flow.puml       [dokumen_utama]    status: [check]
+│   ├── 05_bom_hpp_design.md               [dokumen_utama]    status: [check]
+│   └── 06_security_design.md              [dokumen_utama]    status: [check]
+│
+├── 04_implementation/
+│   │
+│   ├── 01_coding_standard.md              [dokumen_utama]    status: [check]
+│   ├── 02_environment_setup.md            [dokumen_utama]    status: [check]
+│   ├── 03_module_structure.md             [dokumen_utama]    status: [check]
+│   └── 04_git_workflow.md                 [dokumen_utama]    status: [check]
+│
+├── 05_testing/
+│   │
+│   ├── 01_test_plan.md                    [dokumen_utama]    status: [check]
+│   ├── 02_test_cases.md                   [dokumen_utama]    status: [check]
+│   ├── 03_uat_script.md                   [dokumen_utama]    status: [check]
+│   └── 04_bug_report_template.md          [dokumen_utama]    status: [check]
+│
+├── 06_deployment/
+│   │
+│   ├── 01_deployment_guide.md             [dokumen_utama]    status: [check]
+│   ├── 02_environment_config.yaml         [dokumen_utama]    status: [check]
+│   └── 03_release_notes.md                [dokumen_utama]    status: [check]
+│
+└── 07_maintenance
+    │
+    ├── 01_maintenance_guide.md            [dokumen_utama]    status: [check]
+    ├── 02_changelog.md                    [dokumen_utama]    status: [check]
+    └── 03_backup_recovery_procedure.md    [dokumen_utama]    status: [check]
