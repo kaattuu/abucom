@@ -33,11 +33,12 @@ Karena alasan inilah, saya berencana untuk merekrut karyawan guna membantu opera
 
 Untuk mendukung operasional yang lebih profesional, saya telah merancang struktur organisasi dasar yang terdiri dari 6 posisi kunci (saat ini masing-masing diisi oleh satu orang):
 1. **Kepala Percetakan**: Bertanggung jawab atas koordinasi seluruh operasional.
-2. **Pramuniaga**: Melayani pelanggan di garda depan dan menjelaskan produk/layanan.
-3. **Kasir**: Menangani transaksi pembayaran dan rekonsiliasi uang fisik.
-4. **Desainer**: Fokus pada proses desain pesanan produk unggulan.
-5. **Bagian Produksi Cetak**: Mengeksekusi proses cetak dan finishing produk.
-6. **Bagian Gudang**: Mengelola stok bahan baku, barang retail, dan pengadaan.
+2. **staf Pramuniaga**: Melayani pelanggan di garda depan dan menjelaskan produk/layanan.
+3. **staf Kasir**: Menangani transaksi pembayaran dan rekonsiliasi uang fisik.
+4. **staf Desainer**: Fokus pada proses desain pesanan produk unggulan.
+5. **staf Produksi Cetak**: Mengeksekusi proses cetak dan finishing produk.
+6. **staf yang melayani fotocopy dan print dokumen.
+7. **staf Gudang**: Mengelola stok bahan baku, barang retail, dan pengadaan.
 
 Meskipun memiliki jabatan spesifik, budaya kerja yang saya terapkan adalah **kerjasama tim dan saling melengkapi (cross-functional)**. Artinya, setiap karyawan dituntut untuk saling mengisi celah pekerjaan; jika bagian produksi sedang sangat sibuk, rekan dari bagian lain yang sedang luang wajib ikut membantu agar operasional tetap berjalan lancar.
 
