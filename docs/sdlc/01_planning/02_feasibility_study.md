@@ -5,7 +5,7 @@
 | Atribut              | Detail                                                                                                                                           |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Versi**            | 1.2.0                                                                                                                                            |
-| **Status**           | [done]                                                                                                                                           |
+| **Status**           | [finish]                                                                                                                                         |
 | **Tanggal Dibuat**   | 2026-05-11                                                                                                                                       |
 | **Tanggal Direvisi** | 2026-05-11                                                                                                                                       |
 | **Disusun Oleh**     | Senior Business Analyst & Enterprise Architect (AI Review)                                                                                       |
