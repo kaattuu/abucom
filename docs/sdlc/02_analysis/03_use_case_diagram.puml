@@ -1,0 +1,109 @@
+@startuml
+' Konfigurasi Diagram
+left to right direction
+skinparam packageStyle rectangle
+skinparam usecase {
+    BackgroundColor LightCyan
+    BorderColor DarkCyan
+    ArrowColor Teal
+}
+skinparam actor {
+    BackgroundColor AliceBlue
+    BorderColor DarkBlue
+}
+
+' Aktor
+actor "Karyawan" as Karyawan
+actor "Pemilik" as Pemilik
+
+' Relasi Aktor
+Pemilik -|> Karyawan : <<extends>>
+
+' Batas Sistem
+rectangle "Sistem Manajemen Usaha Percetakan AbuCom (CLI)" {
+    
+    usecase "Melakukan Autentikasi (Login)" as UC_Login
+    
+    package "F-02: Transaksi Kasir" {
+        usecase "Mencatat Transaksi Multi-Lini" as UC_Transaksi
+        usecase "Memproses Pembayaran (DP/Lunas)" as UC_Bayar
+        usecase "Memproses Pembatalan & Retur" as UC_Retur
+    }
+    
+    package "F-03: Gudang & BOM" {
+        usecase "Mengelola Inventaris Operasional" as UC_Inventaris
+        usecase "Mengelola Bill of Materials (BOM)" as UC_BOM
+        usecase "Menghitung HPP Otomatis" as UC_HPP
+    }
+    
+    package "F-04: Job Tracking" {
+        usecase "Memperbarui Status Pesanan" as UC_StatusPesanan
+        usecase "Mencatat Lokasi Arsip Desain" as UC_Arsip
+    }
+    
+    package "F-05: Waste Management" {
+        usecase "Mencatat Limbah Produksi" as UC_Limbah
+    }
+    
+    package "F-06: SDM & Penggajian" {
+        usecase "Mencatat Kehadiran Masuk/Keluar" as UC_Absen
+        usecase "Mengelola Data Kasbon Karyawan" as UC_Kasbon
+        usecase "Memproses Penggajian Cerdas & Insentif" as UC_Gaji
+    }
+    
+    package "F-07: PPOB & Jasa Keuangan" {
+        usecase "Mencatat Transaksi PPOB & Keuangan" as UC_PPOB
+        usecase "Mengecek Ambang Batas Saldo" as UC_Saldo
+    }
+    
+    package "F-08: CRM (Pelanggan & Vendor)" {
+        usecase "Mengelola Data Pelanggan" as UC_Pelanggan
+        usecase "Mengelola Data Vendor & Harga" as UC_Vendor
+    }
+    
+    package "F-09: Laporan & Rekonsiliasi" {
+        usecase "Melakukan Rekonsiliasi Kas (Fisik vs Sistem)" as UC_Rekonsiliasi
+        usecase "Mencetak Laporan Keuangan & Laba Rugi" as UC_Laporan
+        usecase "Mengakses Data Finansial Sensitif" as UC_Sensitif
+    }
+}
+
+' Relasi Karyawan (Fungsi Operasional Harian)
+Karyawan --> UC_Login
+Karyawan --> UC_Transaksi
+Karyawan --> UC_Inventaris
+Karyawan --> UC_StatusPesanan
+Karyawan --> UC_Arsip
+Karyawan --> UC_Limbah
+Karyawan --> UC_Absen
+Karyawan --> UC_PPOB
+Karyawan --> UC_Pelanggan
+
+' Relasi Pemilik (Fungsi Manajerial & Keuangan)
+Pemilik --> UC_BOM
+Pemilik --> UC_Kasbon
+Pemilik --> UC_Gaji
+Pemilik --> UC_Vendor
+Pemilik --> UC_Rekonsiliasi
+Pemilik --> UC_Laporan
+Pemilik --> UC_Sensitif
+
+' Relasi Antar Use Case (Include/Extend)
+UC_Transaksi ..> UC_Bayar : <<include>>
+UC_Transaksi <.. UC_Retur : <<extend>>
+UC_Transaksi ..> UC_HPP : <<include>>
+UC_PPOB ..> UC_Saldo : <<include>>
+UC_Gaji ..> UC_Kasbon : <<include>>
+
+' Catatan Penjelasan
+note right of UC_Sensitif : Termasuk tabungan pengadaan aset\ndan kewajiban hutang bank.
+note bottom of UC_Transaksi : Otomatis menerapkan skema harga\ngrosir atau mitra berdasarkan syarat.
+
+@enduml
+
+' ==========================================
+' REFERENSI DOKUMEN:
+' 1. docs/sdlc/02_analysis/01_business_requirements.md
+' 2. docs/sdlc/02_analysis/02_software_requirements.md
+' 3. docs/sdlc/narasi.txt
+' ==========================================
