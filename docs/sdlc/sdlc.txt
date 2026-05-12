@@ -11,7 +11,7 @@ sdlc/
 ├── 02_analysis/
 │   │
 │   ├── 01_business_requirements.md        [dokumen_utama]    status: [finish]
-│   ├── 02_software_requirements.md        [dokumen_utama]    status: [create_file]
+│   ├── 02_software_requirements.md        [dokumen_utama]    status: [draft]
 │   ├── 03_use_case_diagram.puml           [dokumen_utama]    status: [check]
 │   ├── 04_workflow_diagram.puml           [dokumen_utama]    status: [check]
 │   ├── 05_data_dictionary.md              [dokumen_utama]    status: [check]
