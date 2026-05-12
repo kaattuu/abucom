@@ -5,7 +5,7 @@
 | Atribut              | Detail                                                  |
 | -------------------- | ------------------------------------------------------- |
 | **Versi**            | 1.1.0                                                   |
-| **Status**           | [done]                                                  |
+| **Status**           | [finish]                                                |
 | **Tanggal Dibuat**   | 2026-05-12                                              |
 | **Tanggal Direvisi** | 2026-05-12                                              |
 | **Disusun Oleh**     | Senior Business Analyst & QA Specialist (AI Review)     |
