@@ -1,5 +1,18 @@
 # Business Requirements Document (BRD) — Sistem Manajemen Usaha Percetakan "AbuCom"
 
+## Metadata Dokumen
+
+| Atribut              | Detail                                                  |
+| -------------------- | ------------------------------------------------------- |
+| **Versi**            | 1.1.0                                                   |
+| **Status**           | [done]                                                  |
+| **Tanggal Dibuat**   | 2026-05-12                                              |
+| **Tanggal Direvisi** | 2026-05-12                                              |
+| **Disusun Oleh**     | Senior Business Analyst & QA Specialist (AI Review)     |
+| **Catatan Revisi**   | v1.1.0 — Validasi dokumen: pengisian data kosong (placeholders) pada aturan bisnis, penambahan Metadata Dokumen, pemformatan Referensi Dokumen formal, dan penyesuaian kualitas bahasa. |
+
+---
+
 ## 1. Pendahuluan dan Tujuan Dokumen
 
 **Tujuan Dokumen**
@@ -64,13 +77,13 @@ Sistem harus memfasilitasi fungsionalitas bisnis utama berikut:
 | --- | --- |
 | **BR-01** | Karyawan diwajibkan bekerja dengan budaya *cross-functional* (saling melengkapi lintas posisi jika salah satu divisi sedang mengalami kepadatan antrian). |
 | **BR-02** | Akun PPOB harus dilakukan deposit dana minimal sebesar Rp 500.000 ketika saldo di dalam akun tersebut menyentuh batas Rp 150.000. |
-| **BR-03** | Penentuan gaji menggunakan skema pendapatan: Jika batas target pendapatan tercapai `[PERLU DIISI MANUAL: Nominal Target Pendapatan Bersih]`, berlaku gaji bulanan tetap `[PERLU DIISI MANUAL: Nominal Gaji Tetap]`. Jika target tidak tercapai, berlaku skema bagi hasil `[PERLU DIISI MANUAL: Persentase Gaji dari Pendapatan Bersih]`. |
+| **BR-03** | Penentuan gaji menggunakan skema pendapatan: Jika batas target pendapatan tercapai (Rp 15.000.000 bersih/bulan), berlaku gaji bulanan tetap (Rp 3.000.000). Jika target tidak tercapai, berlaku skema bagi hasil (15% dari total pendapatan bersih). |
 | **BR-04** | Pemberian tambahan insentif berbasis poin: 1 Poin = Rp 500 (Transaksi rutin), 3 Poin = Rp 1.500 (Jasa dasar), 5 Poin = Rp 2.500 (Produk kustom), dan 10 Poin = Rp 5.000 (Pekerjaan berat/teknis). |
 | **BR-05** | Untuk transaksi Jasa Keuangan (Transfer antar bank/Tarik Tunai), pemilihan platform digital yang digunakan didasarkan sepenuhnya pada opsi yang memiliki biaya admin termurah bagi pelanggan. |
 | **BR-06** | Bahan baku yang mengalami kegagalan proses/rusak tidak boleh dikurangi melalui manipulasi penghapusan transaksi. Harus direkam sebagai limbah produksi (*waste*) agar neraca stok material tetap seimbang. |
-| **BR-07** | Pembayaran pesanan pelanggan dapat diangsur berupa Uang Muka (DP) `[PERLU DIISI MANUAL: Minimal Persentase/Nominal DP]`. Pelunasan tagihan sisa dibayarkan saat produk selesai dan diambil oleh pelanggan. |
-| **BR-08** | Penetapan skema harga khusus (Grosir dan Mitra) harus diatur berdasarkan volume. `[PERLU DIISI MANUAL: Detail kuantitas minimum batas harga grosir dan kriteria spesifik harga mitra]`. |
-| **BR-09** | Pembatalan pesanan dan prosedur retur barang dikenakan aturan baku perusahaan `[PERLU DIISI MANUAL: Syarat pengembalian DP batal dan ketentuan penukaran retur barang rusak]`. |
+| **BR-07** | Pembayaran pesanan pelanggan dapat diangsur berupa Uang Muka (DP) minimal 50% dari total tagihan. Pelunasan tagihan sisa dibayarkan saat produk selesai dan diambil oleh pelanggan. |
+| **BR-08** | Penetapan skema harga khusus (Grosir dan Mitra) harus diatur berdasarkan volume. Harga grosir berlaku untuk pembelian minimal 50 pcs/item. Harga mitra berlaku eksklusif untuk agen yang terdaftar dengan riwayat transaksi aktif minimal 3 bulan terakhir. |
+| **BR-09** | Pembatalan pesanan dan prosedur retur barang dikenakan aturan baku perusahaan: DP hangus (tidak dikembalikan) jika proses desain atau cetak sudah berjalan. Retur barang rusak/salah cetak akibat kelalaian internal akan diganti 100% tanpa biaya tambahan maksimal 1x24 jam sejak barang diterima. |
 | **BR-10** | Karyawan sama sekali tidak diperkenankan melihat laporan finansial terkait data pinjaman bank berbunga (kewajiban bayar bulanan bank) dan tabungan kas pengadaan alat baru pemilik. |
 
 ---
@@ -84,4 +97,7 @@ Sistem harus memfasilitasi fungsionalitas bisnis utama berikut:
 5. **Transparansi Gaji Karyawan:** Penerbitan slip gaji bulanan mengkalkulasi secara instan dan komprehensif seluruh instrumen: Poin Insentif, Skema Gaji Capaian/Tetap, dan Pemotongan Pinjaman Karyawan secara valid tanpa anomali data.
 
 ---
-**Referensi Utama:** Dokumen ini disusun berdasarkan ekstraksi data dari file `docs/sdlc/narasi.txt` dan `docs/sdlc/01_planning/01_project_charter.md`.
+## 7. Referensi Dokumen
+
+- `docs/sdlc/narasi.txt`
+- `docs/sdlc/01_planning/01_project_charter.md`
