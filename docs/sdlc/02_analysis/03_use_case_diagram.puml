@@ -1,4 +1,16 @@
 @startuml
+' ============================================
+' METADATA DIAGRAM
+' ============================================
+' Judul: Use Case Diagram - Sistem Manajemen Usaha Percetakan AbuCom
+' Versi: 1.1.0
+' Status: [finish]
+' Tanggal Dibuat: 2026-05-12
+' Tanggal Validasi: 2026-05-12
+' Disusun Oleh: Senior UML Architect & Senior Business Analyst (AI)
+' Validasi Oleh: AI Validation System
+' ============================================
+
 ' Konfigurasi Diagram
 left to right direction
 skinparam packageStyle rectangle
@@ -23,48 +35,159 @@ Pemilik -|> Karyawan : <<extends>>
 rectangle "Sistem Manajemen Usaha Percetakan AbuCom (CLI)" {
     
     usecase "Melakukan Autentikasi (Login)" as UC_Login
+    ' Use Case: Melakukan Autentikasi (Login)
+    ' Deskripsi: Pengguna memasukkan username dan password untuk mengakses sistem
+    ' Pre-condition: Pengguna memiliki akun yang valid di sistem
+    ' Post-condition: Pengguna berhasil masuk ke menu utama sesuai peran (role)
+    ' Sumber: F-01: Modul Autentikasi dan Otorisasi (SRS)
     
     package "F-02: Transaksi Kasir" {
         usecase "Mencatat Transaksi Multi-Lini" as UC_Transaksi
+        ' Use Case: Mencatat Transaksi Multi-Lini
+        ' Deskripsi: Mencatat transaksi untuk berbagai layanan (Percetakan, ATK, PPOB, Jasa Keuangan, Jasa Teknis)
+        ' Pre-condition: Pengguna sudah login dan memiliki otorisasi untuk transaksi
+        ' Post-condition: Transaksi tercatat, stok berkurang otomatis, struk digital dibuat
+        ' Sumber: F-02: Modul Transaksi Multi-Lini Terpadu (SRS), BR-07, BR-08
+        
         usecase "Memproses Pembayaran (DP/Lunas)" as UC_Bayar
+        ' Use Case: Memproses Pembayaran (DP/Lunas)
+        ' Deskripsi: Memproses pembayaran dengan opsi DP minimal 50% atau lunas
+        ' Pre-condition: Transaksi sudah dicatat dengan item dan harga
+        ' Post-condition: Status pembayaran diperbarui, kas bertambah, riwayat pembayaran tercatat
+        ' Sumber: F-02: Modul Transaksi Multi-Lini Terpadu (SRS), BR-07
+        
         usecase "Memproses Pembatalan & Retur" as UC_Retur
+        ' Use Case: Memproses Pembatalan & Retur
+        ' Deskripsi: Menangani pembatalan pesanan dan retur barang sesuai aturan perusahaan
+        ' Pre-condition: Ada permintaan pembatalan atau retur dari pelanggan
+        ' Post-condition: DP hangus jika produksi sudah berjalan, stok dikembalikan jika retur valid
+        ' Sumber: F-02: Modul Transaksi Multi-Lini Terpadu (SRS), BR-09
     }
     
     package "F-03: Gudang & BOM" {
         usecase "Mengelola Inventaris Operasional" as UC_Inventaris
+        ' Use Case: Mengelola Inventaris Operasional
+        ' Deskripsi: Mengelola stok bahan baku dan barang retail dengan presisi tinggi
+        ' Pre-condition: Pengguna memiliki otorisasi untuk mengelola gudang
+        ' Post-condition: Stok diperbarui, riwayat perubahan tercatat, alert stok minimum aktif
+        ' Sumber: F-03: Modul Manajemen Gudang dan HPP berbasis BOM (SRS), BR-06
+        
         usecase "Mengelola Bill of Materials (BOM)" as UC_BOM
+        ' Use Case: Mengelola Bill of Materials (BOM)
+        ' Deskripsi: Mendefinisikan komposisi bahan untuk setiap produk/jasa
+        ' Pre-condition: Produk/jasa sudah terdaftar di sistem
+        ' Post-condition: BOM tersimpan untuk perhitungan HPP otomatis
+        ' Sumber: F-03: Modul Manajemen Gudang dan HPP berbasis BOM (SRS)
+        
         usecase "Menghitung HPP Otomatis" as UC_HPP
+        ' Use Case: Menghitung HPP Otomatis
+        ' Deskripsi: Menghitung Harga Pokok Penjualan berdasarkan BOM dan pemakaian bahan
+        ' Pre-condition: BOM sudah didefinisikan, transaksi tercatat
+        ' Post-condition: HPP dihitung dan tercatat untuk analisis profitabilitas
+        ' Sumber: F-03: Modul Manajemen Gudang dan HPP berbasis BOM (SRS)
     }
     
     package "F-04: Job Tracking" {
         usecase "Memperbarui Status Pesanan" as UC_StatusPesanan
+        ' Use Case: Memperbarui Status Pesanan
+        ' Deskripsi: Memperbarui status pesanan (Antri, Proses Desain, Produksi, Selesai, Diambil)
+        ' Pre-condition: Transaksi sudah tercatat, pesanan ada dalam sistem
+        ' Post-condition: Status diperbarui, notifikasi untuk tahap berikutnya aktif
+        ' Sumber: F-04: Modul Manajemen Pesanan (Job Tracking) (SRS)
+        
         usecase "Mencatat Lokasi Arsip Desain" as UC_Arsip
+        ' Use Case: Mencatat Lokasi Arsip Desain
+        ' Deskripsi: Mencatat lokasi file desain pelanggan untuk referensi masa depan
+        ' Pre-condition: Pesanan memiliki file desain yang perlu disimpan
+        ' Post-condition: Lokasi file tercatat dan dapat diakses untuk re-order
+        ' Sumber: F-04: Modul Manajemen Pesanan (Job Tracking) (SRS)
     }
     
     package "F-05: Waste Management" {
         usecase "Mencatat Limbah Produksi" as UC_Limbah
+        ' Use Case: Mencatat Limbah Produksi
+        ' Deskripsi: Mencatat bahan baku yang rusak atau salah cetak sebagai limbah produksi
+        ' Pre-condition: Terjadi kegagalan produksi atau bahan rusak
+        ' Post-condition: Stok bahan dikurangi sebagai limbah, neraca stok tetap seimbang
+        ' Sumber: F-05: Modul Pencatatan Limbah Produksi (Waste Management) (SRS), BR-06
     }
     
     package "F-06: SDM & Penggajian" {
         usecase "Mencatat Kehadiran Masuk/Keluar" as UC_Absen
+        ' Use Case: Mencatat Kehadiran Masuk/Keluar
+        ' Deskripsi: Mencatat waktu masuk dan keluar kerja karyawan
+        ' Pre-condition: Karyawan hadir di tempat kerja
+        ' Post-condition: Data kehadiran tercatat untuk perhitungan gaji
+        ' Sumber: F-06: Modul Manajemen SDM dan Penggajian Cerdas (SRS)
+        
         usecase "Mengelola Data Kasbon Karyawan" as UC_Kasbon
+        ' Use Case: Mengelola Data Kasbon Karyawan
+        ' Deskripsi: Mengelola data pinjaman karyawan (kasbon) dan pemotongan gaji otomatis
+        ' Pre-condition: Karyawan mengambil pinjaman dari perusahaan
+        ' Post-condition: Data kasbon tercatat, pemotongan gaji otomatis diaktifkan
+        ' Sumber: F-06: Modul Manajemen SDM dan Penggajian Cerdas (SRS)
+        
         usecase "Memproses Penggajian Cerdas & Insentif" as UC_Gaji
+        ' Use Case: Memproses Penggajian Cerdas & Insentif
+        ' Deskripsi: Menghitung gaji berdasarkan skema tetap atau persentase, plus insentif poin
+        ' Pre-condition: Data kehadiran dan transaksi bulanan tersedia
+        ' Post-condition: Slip gaji dihasilkan, pembayaran diproses, laporan gaji tersedia
+        ' Sumber: F-06: Modul Manajemen SDM dan Penggajian Cerdas (SRS), BR-03, BR-04
     }
     
     package "F-07: PPOB & Jasa Keuangan" {
         usecase "Mencatat Transaksi PPOB & Keuangan" as UC_PPOB
+        ' Use Case: Mencatat Transaksi PPOB & Keuangan
+        ' Deskripsi: Mencatat transaksi pulsa, token, transfer bank, dan tarik tunai
+        ' Pre-condition: Ada permintaan layanan dari pelanggan
+        ' Post-condition: Transaksi tercatat, saldo berkurang, riwayat mutasi tersimpan
+        ' Sumber: F-07: Modul Jasa Keuangan & PPOB (SRS), BR-02, BR-05
+        
         usecase "Mengecek Ambang Batas Saldo" as UC_Saldo
+        ' Use Case: Mengecek Ambang Batas Saldo
+        ' Deskripsi: Memantau saldo akun PPOB dan memberikan peringatan jika di bawah batas minimum
+        ' Pre-condition: Ada transaksi PPOB atau keuangan
+        ' Post-condition: Peringatan ditampilkan jika saldo < Rp 150.000
+        ' Sumber: F-07: Modul Jasa Keuangan & PPOB (SRS), BR-02
     }
     
     package "F-08: CRM (Pelanggan & Vendor)" {
         usecase "Mengelola Data Pelanggan" as UC_Pelanggan
+        ' Use Case: Mengelola Data Pelanggan
+        ' Deskripsi: Mengelola database pelanggan, kontak, dan riwayat transaksi
+        ' Pre-condition: Ada pelanggan baru atau data yang perlu diperbarui
+        ' Post-condition: Data pelanggan tersimpan untuk CRM dan promosi
+        ' Sumber: F-08: Modul CRM (Pelanggan & Vendor) (SRS)
+        
         usecase "Mengelola Data Vendor & Harga" as UC_Vendor
+        ' Use Case: Mengelola Data Vendor & Harga
+        ' Deskripsi: Mengelola data supplier/vendor dan perbandingan harga beli
+        ' Pre-condition: Ada vendor baru atau harga yang perlu diperbarui
+        ' Post-condition: Data vendor tersimpan untuk pengadaan dan analisis harga
+        ' Sumber: F-08: Modul CRM (Pelanggan & Vendor) (SRS)
     }
     
     package "F-09: Laporan & Rekonsiliasi" {
         usecase "Melakukan Rekonsiliasi Kas (Fisik vs Sistem)" as UC_Rekonsiliasi
+        ' Use Case: Melakukan Rekonsiliasi Kas (Fisik vs Sistem)
+        ' Deskripsi: Mencocokkan jumlah uang fisik di laci dengan saldo sistem
+        ' Pre-condition: Shift kerja berakhir atau penutupan harian
+        ' Post-condition: Laporan rekonsiliasi dihasilkan, selisih tercatat
+        ' Sumber: F-09: Modul Pelaporan Keuangan dan Rekonsiliasi Kas (SRS)
+        
         usecase "Mencetak Laporan Keuangan & Laba Rugi" as UC_Laporan
+        ' Use Case: Mencetak Laporan Keuangan & Laba Rugi
+        ' Deskripsi: Menghasilkan laporan keuangan periodik (harian, bulanan, tahunan)
+        ' Pre-condition: Data transaksi tersedia untuk periode yang diminta
+        ' Post-condition: Laporan keuangan dihasilkan dalam format teks/ASCII
+        ' Sumber: F-09: Modul Pelaporan Keuangan dan Rekonsiliasi Kas (SRS)
+        
         usecase "Mengakses Data Finansial Sensitif" as UC_Sensitif
+        ' Use Case: Mengakses Data Finansial Sensitif
+        ' Deskripsi: Mengakses data tabungan pengadaan aset dan kewajiban hutang bank
+        ' Pre-condition: Pengguna memiliki peran Pemilik (bukan Karyawan)
+        ' Post-condition: Data finansial sensitif dapat dilihat hanya oleh pemilik
+        ' Sumber: F-09: Modul Pelaporan Keuangan dan Rekonsiliasi Kas (SRS), BR-10
     }
 }
 
@@ -98,6 +221,35 @@ UC_Gaji ..> UC_Kasbon : <<include>>
 ' Catatan Penjelasan
 note right of UC_Sensitif : Termasuk tabungan pengadaan aset\ndan kewajiban hutang bank.
 note bottom of UC_Transaksi : Otomatis menerapkan skema harga\ngrosir atau mitra berdasarkan syarat.
+
+' ============================================
+' TABEL MAPPING ELEMEN DIAGRAM vs REQUIREMENTS
+' ============================================
+' | Elemen Diagram          | Business Requirements | Software Requirements | Status |
+' |-------------------------|----------------------|----------------------|--------|
+' | Aktor: Karyawan         | ✓ Bagian 4, BR-01    | ✓ Karakteristik Pengguna | ✓ |
+' | Aktor: Pemilik          | ✓ Bagian 4, BR-10    | ✓ Karakteristik Pengguna | ✓ |
+' | UC_Login                | ✓ Otentikasi         | ✓ F-01: Modul Autentikasi | ✓ |
+' | UC_Transaksi            | ✓ BR-07, BR-08       | ✓ F-02: Transaksi Multi-Lini | ✓ |
+' | UC_Bayar                | ✓ BR-07              | ✓ F-02: Pembayaran DP/Lunas | ✓ |
+' | UC_Retur                | ✓ BR-09              | ✓ F-02: Pembatalan & Retur | ✓ |
+' | UC_Inventaris           | ✓ Manajemen Stok     | ✓ F-03: Manajemen Gudang | ✓ |
+' | UC_BOM                  | ✓ HPP berbasis BOM   | ✓ F-03: Bill of Materials | ✓ |
+' | UC_HPP                  | ✓ Perhitungan HPP    | ✓ F-03: HPP Otomatis | ✓ |
+' | UC_StatusPesanan        | ✓ Job Tracking       | ✓ F-04: Manajemen Pesanan | ✓ |
+' | UC_Arsip                | ✓ Arsip Desain       | ✓ F-04: Lokasi Arsip | ✓ |
+' | UC_Limbah               | ✓ BR-06              | ✓ F-05: Waste Management | ✓ |
+' | UC_Absen                | ✓ Manajemen SDM      | ✓ F-06: Kehadiran | ✓ |
+' | UC_Kasbon               | ✓ Pengelolaan Kasbon | ✓ F-06: Data Kasbon | ✓ |
+' | UC_Gaji                 | ✓ BR-03, BR-04       | ✓ F-06: Penggajian Cerdas | ✓ |
+' | UC_PPOB                 | ✓ BR-02, BR-05       | ✓ F-07: Jasa Keuangan | ✓ |
+' | UC_Saldo                | ✓ BR-02              | ✓ F-07: Ambang Batas Saldo | ✓ |
+' | UC_Pelanggan            | ✓ Database Pelanggan | ✓ F-08: CRM Pelanggan | ✓ |
+' | UC_Vendor               | ✓ Manajemen Supplier | ✓ F-08: CRM Vendor | ✓ |
+' | UC_Rekonsiliasi         | ✓ Rekonsiliasi Kas   | ✓ F-09: Pelaporan Keuangan | ✓ |
+' | UC_Laporan              | ✓ Laporan Keuangan   | ✓ F-09: Laporan Laba Rugi | ✓ |
+' | UC_Sensitif             | ✓ BR-10              | ✓ F-09: Data Finansial Sensitif | ✓ |
+' ============================================
 
 @enduml
 
