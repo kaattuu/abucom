@@ -1,5 +1,18 @@
 # Software Requirements Specification (SRS) — Sistem Manajemen Usaha Percetakan "AbuCom"
 
+## Metadata Dokumen
+
+| Atribut              | Detail                                                  |
+| -------------------- | ------------------------------------------------------- |
+| **Versi**            | 1.1.0                                                   |
+| **Status**           | [finish]                                                |
+| **Tanggal Dibuat**   | 2026-05-12                                              |
+| **Tanggal Direvisi** | 2026-05-12                                              |
+| **Disusun Oleh**     | Senior Systems Analyst & Senior Software Architect (AI) |
+| **Catatan Revisi**   | v1.1.0 — Validasi dokumen: pengisian parameter teknis (latency, RAM), penambahan fitur retur/batal pada F-02, integrasi modul pelaporan F-09, penambahan Metadata Dokumen, dan verifikasi kepatuhan FP/CLI. |
+
+---
+
 ## 1. Pendahuluan
 
 **Tujuan Dokumen**
@@ -50,8 +63,8 @@ Berikut merupakan jabaran fitur sistem, memetakan kebutuhan input (*arguments*),
 - **Output**: *Stdout* menampilkan status login ("Berhasil" atau "Gagal"). Jika berhasil, layar dibersihkan (*clear screen*) dan menu utama dirender sesuai otorisasi token pengguna.
 
 ### F-02: Modul Transaksi Multi-Lini Terpadu (Kasir)
-- **Input**: Perintah pemilihan tipe layanan (1. Percetakan, 2. ATK, 3. PPOB, 4. Jasa), ID Barang/Layanan, Kuantitas, serta Argumen status pembayaran (1. DP, 2. Lunas). Jika DP, minta nominal setoran.
-- **Proses**: Fungsi kalkulasi akan menghitung subtotal menggunakan prinsip *pure function* tanpa memanipulasi referensi harga awal. Logika memeriksa status volume: menerapkan skema harga grosir (jika kuantitas >= 50 pcs) atau harga spesial mitra (jika riwayat aktif pembeli >= 3 bulan). Sistem kemudian memetakan (*mapping*) transaksi ini untuk memanggil fungsi pemotongan stok fungsional.
+- **Input**: Perintah pemilihan tipe layanan (1. Percetakan, 2. ATK, 3. PPOB, 4. Jasa), ID Barang/Layanan, Kuantitas, serta Argumen status pembayaran (1. DP, 2. Lunas). Jika DP, minta nominal setoran (minimal 50%).
+- **Proses**: Fungsi kalkulasi akan menghitung subtotal menggunakan prinsip *pure function* tanpa memanipulasi referensi harga awal. Logika memeriksa status volume: menerapkan skema harga grosir (jika kuantitas >= 50 pcs) atau harga spesial mitra (jika riwayat aktif pembeli >= 3 bulan). Sistem juga mengakomodasi fungsi evaluasi pengembalian dana untuk kasus pembatalan (DP divalidasi hangus jika tahapan produksi >= Proses Desain) dan retur barang (validasi *timestamp* maksimal 1x24 jam sejak barang diterima). Sistem kemudian memetakan (*mapping*) transaksi ini untuk memanggil fungsi pemotongan stok fungsional.
 - **Output**: Menampilkan struk digital pada CLI berisi rincian *item*, harga, nilai diskon/harga khusus, tagihan DP, tagihan sisa, dan status produksi pesanan.
 
 ### F-03: Modul Manajemen Gudang dan HPP berbasis BOM
@@ -84,13 +97,18 @@ Berikut merupakan jabaran fitur sistem, memetakan kebutuhan input (*arguments*),
 - **Proses**: Penambahan representasi data baru secara kekal (*immutable log* insertion) pada basis data ke dalam pengawasan `branch_id` yang sesuai.
 - **Output**: Memunculkan respons "*Data entitas berhasil direkam dalam log database*".
 
+### F-09: Modul Pelaporan Keuangan dan Rekonsiliasi Kas
+- **Input**: Argumen rentang waktu operasional (tanggal awal, tanggal akhir), dan perintah jenis laporan (Laba Rugi, Rekonsiliasi Kas, atau Ringkasan Aset/Pinjaman).
+- **Proses**: *Pure function* komputasi melakukan agregasi (menggunakan metode *reduce* dan *filter*) terhadap *immutable list* transaksi dari database. Fungsi penyaring keamanan bekerja secara ketat berdasarkan `role` (Karyawan difilter secara fungsional sehingga mustahil menerima kembalian *tuple* data yang memuat rincian tabungan pengadaan aset pemilik maupun kewajiban pinjaman bank berbunga).
+- **Output**: Tabel representasi ASCII di CLI yang menampilkan rekapitulasi pendapatan, validasi fisik laci kas vs sistem, serta margin keuntungan bersih.
+
 ---
 
 ## 5. Kebutuhan Non-Fungsional
 
 **Kinerja (*Performance*)**
-- Respon waktu eksekusi interaksi *prompt* dasar hingga render output terminal tidak boleh melebihi `[MASUKKAN_NILAI_MAKSIMAL_LATENCY_CLI]` milidetik (ms) untuk menghindari latensi operasional bagi kasir yang tengah menghadapi antrean fisik.
-- Penggunaan memori perangkat lunak tidak lebih dari `[MASUKKAN_BATAS_MAKSIMAL_RAM]` MB saat komputasi kalkulasi fungsi HPP dengan ribuan baris rekaman material.
+- Respon waktu eksekusi interaksi *prompt* dasar hingga render output terminal tidak boleh melebihi 150 milidetik (ms) untuk menghindari latensi operasional bagi kasir yang tengah menghadapi antrean fisik.
+- Penggunaan memori perangkat lunak tidak lebih dari 256 MB saat komputasi kalkulasi fungsi HPP dengan ribuan baris rekaman material.
 
 **Keamanan (*Security*)**
 - **Otentikasi & Otorisasi**: Akses operasional sistem dikendalikan ketat menggunakan validasi RBAC dari ekstraksi *payload* token JWT pada tiap eksekusi menu.
@@ -106,4 +124,5 @@ Berikut merupakan jabaran fitur sistem, memetakan kebutuhan input (*arguments*),
 
 - `docs/sdlc/02_analysis/01_business_requirements.md`
 - `docs/sdlc/01_planning/04_tech_stack_decision.md`
+- `docs/sdlc/01_planning/01_project_charter.md`
 - `docs/sdlc/narasi.txt`
