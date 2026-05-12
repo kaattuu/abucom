@@ -5,182 +5,281 @@
 | Atribut | Detail |
 |---|---|
 | **Judul Dokumen** | Tech Stack Decision |
-| **Versi** | 1.0.0 |
-| **Status** | [draft] |
+| **Versi** | 1.1.0 |
+| **Status** | [finish] |
 | **Tanggal Dibuat** | 2026-05-12 |
+| **Tanggal Direvisi** | 2026-05-12 |
 | **Disusun Oleh** | Senior Enterprise Architect & Senior Technical Lead (AI) |
+| **Catatan Revisi** | v1.1.0 — Validasi teknis arsitektur, pengisian parameter versi spesifik, penegasan paradigma FP, penyesuaian tata bahasa, dan pembersihan placeholder. |
 
 ## Ringkasan Eksekutif (Executive Summary)
-Dokumen ini menguraikan keputusan arsitektur dan teknologi (Tech Stack Decision) untuk pengembangan Sistem Manajemen Usaha Percetakan "AbuCom". Keputusan utama meliputi penggunaan Python 3.14.2+ dengan paradigma Functional Programming, basis data MySQL, dan antarmuka CLI pada tahap awal. Pemilihan ini didasarkan pada kebutuhan sistem yang handal, dapat direplikasi secara lokal (*Multi-Branch Ready*), kendala biaya lisensi perangkat lunak sebesar Rp 0, serta kemudahan kolaborasi dengan ekosistem AI-Augmented Development.
+
+Dokumen ini menguraikan keputusan arsitektur dan teknologi (Tech Stack Decision) untuk pengembangan Sistem Manajemen Usaha Percetakan "AbuCom". Keputusan utama meliputi penggunaan **Python 3.14.2+** dengan paradigma **Functional Programming (FP)** secara murni, basis data **MySQL 8.4 LTS (Community Edition)**, dan antarmuka **CLI** pada tahap pertama. Pemilihan ini didasarkan pada kebutuhan sistem yang andal, dapat direplikasi secara lokal (*Multi-Branch Ready*), kendala biaya lisensi perangkat lunak sebesar **Rp 0**, serta kemudahan kolaborasi dengan ekosistem AI-Augmented Development. Seluruh komponen berstatus *open-source* dan telah dikonfirmasi kompatibel di **Linux Debian 12 Bookworm** maupun **Windows 11 24H2**.
 
 ## Konteks dan Latar Belakang Keputusan
-Proyek AbuCom adalah sistem pengelolaan operasional untuk UMKM percetakan dengan 20 modul fungsional yang membawahi produksi cetak, layanan retail ATK, PPOB, layanan teknis, hingga SDM dan manajemen kasir. Karena keterbatasan sumber daya manusia tunggal (pemilik), sistem ini berfokus pada otomatisasi operasional terpadu. Sistem akan dibangun sebagai aplikasi CLI pada skala usaha lokal dengan kendala mutlak berupa lisensi perangkat lunak sebesar Rp 0 (mengandalkan teknologi *open-source*) dan pewajiban penerapan paradigma *Functional Programming*. Arsitektur dirancang sedemikian rupa agar mematuhi standar skalabilitas *Multi-Branch Ready* untuk rencana ekspansi toko cabang di kemudian hari.
+
+Proyek AbuCom adalah sistem pengelolaan operasional untuk UMKM percetakan dengan **20 modul fungsional** yang mencakup produksi cetak, penjualan retail ATK, layanan PPOB, jasa keuangan, jasa teknis, SDM, penggajian, dan manajemen kasir. Karena keterbatasan sumber daya manusia (pemilik tunggal), sistem ini difokuskan pada otomatisasi operasional terpadu. Sistem dibangun sebagai aplikasi CLI, berjalan secara lokal, dengan dua kendala mutlak:
+
+1. **Biaya lisensi Rp 0** — seluruh teknologi wajib *open-source*.
+2. **Paradigma Functional Programming** — tidak boleh ada arsitektur OOP.
+
+Arsitektur dirancang agar *Multi-Branch Ready*: setiap entitas data menyimpan referensi `branch_id` sebagai *foreign key* wajib sehingga sistem siap dikonsolidasikan menjadi platform multi-cabang tanpa *re-design* skema database di kemudian hari.
 
 ## Kriteria Evaluasi Teknologi
+
 - **Biaya Lisensi**: Seluruh teknologi harus gratis dan *open-source* (Rp 0).
-- **Kesesuaian Paradigma**: Dukungan murni terhadap penerapan *Functional Programming*.
+- **Kesesuaian Paradigma**: Dukungan murni terhadap *Functional Programming* — tidak ada ketergantungan pada *class instance* atau *mutable state*.
 - **Kemudahan Pembelajaran**: Relatif mudah dikuasai oleh Junior Programmer dengan bantuan langsung agen AI.
-- **Ketersediaan Dokumentasi & Komunitas**: Kematangan ekosistem dalam menyediakan referensi standar dan fitur penyelesaian modul kompleks.
-- **Performa & Integritas Relasional**: Kemampuan basis data menangani 20 modul integratif secara stabil tanpa celah *error*.
-- **Kompatibilitas Lintas OS**: Mendukung infrastruktur yang sudah sedia ada yaitu Linux Debian 12 Bookworm dan Windows 11.
-- **Kesiapan Skalabilitas**: Abstraksi data mendukung penuh struktur basis multi-cabang terpusat.
+- **Ketersediaan Dokumentasi & Komunitas**: Ekosistem matang dengan referensi standar dan komunitas aktif.
+- **Performa & Integritas Relasional**: Basis data mampu menangani 20 modul integratif secara stabil dengan jaminan ACID.
+- **Kompatibilitas Lintas OS**: Mendukung Linux Debian 12 Bookworm dan Windows 11 24H2 tanpa *compiler error*.
+- **Kesiapan Skalabilitas**: Struktur data mendukung arsitektur multi-cabang terpusat.
 
 ## Keputusan Teknologi per Komponen
 
 ### 5.1 Bahasa Pemrograman
-| Kandidat | Kelebihan | Kekurangan | Skor Evaluasi (1-5) |
+
+| Kandidat | Kelebihan | Kekurangan | Skor (1-5) |
 |---|---|---|---|
-| **Python 3.14.2+** | Sintaks bersih, ekosistem besar, mendukung *Functional Programming*, sangat optimal dikembangkan bersama AI. | Eksekusi dapat lebih lambat dari bahasa *compiled*, distribusi aplikasi *executable* CLI sedikit menantang. | 5 |
-| Node.js / TypeScript | *Asynchronous I/O* yang unggul, ekosistem masif. | Kurva pembelajaran *async* cukup membingungkan untuk implementasi *functional programming* murni tingkat junior. | 4 |
-| Go | Performa tingkat eksekusi sangat stabil dan kencang, kompilasi binari ringkas. | Tipe data kaku (*strict*) membuatnya cukup memakan waktu dalam eksplorasi logika bersama AI. | 3 |
-| Java | Ekosistem sangat matang. | Terlalu *verbose* (bertele-tele) dan berat untuk *use-case* aplikasi bisnis *command line* sederhana. | 2 |
+| **Python 3.14.2+** | Sintaks bersih, ekosistem besar, mendukung FP *pure functions*, sangat optimal dikembangkan bersama AI. | Eksekusi lebih lambat dari bahasa *compiled*; distribusi *executable* CLI sedikit menantang. | 5 |
+| Node.js / TypeScript | *Async I/O* unggul, ekosistem masif. | Kurva *async* membingungkan untuk FP murni tingkat junior. | 4 |
+| Go | Eksekusi stabil dan kencang, kompilasi binari ringkas. | Tipe data kaku memperlambat eksplorasi logika bersama AI. | 3 |
+| Java | Ekosistem sangat matang. | Terlalu *verbose* dan berat untuk aplikasi bisnis CLI. | 2 |
 
 **Keputusan**: Python 3.14.2+
-**Justifikasi**: Python merupakan opsi terbaik demi mendayagunakan metode kerja *AI-Augmented Development*, mengingat kecerdasan buatan luar biasa kuat saat berinteraksi dengan sintaks Python. Selain itu, Python mendukung struktur penulisan paradigma *Functional Programming* yang bebas *state* tanpa harus memasukkan lapisan modifikasi kompilator yang mendalam.
-**Risiko dan Mitigasi**: Kinerja I/O aplikasi *console* mungkin melambat jika data masif. Strateginya difokuskan pada pemrosesan fungsional dan pengoptimasian skema panggilan kueri basis data.
+
+**Justifikasi**: Python adalah pilihan terbaik untuk metode *AI-Augmented Development* karena agen AI sangat efektif berinteraksi dengan sintaks Python. Python mendukung penulisan *pure functions*, *higher-order functions*, dan *immutable data structures* secara alami tanpa memerlukan modifikasi kompilator.
+
+**Risiko dan Mitigasi**: Kinerja I/O dapat melambat jika data masif. Strategi: optimasi pada lapisan kueri SQL (penggunaan indeks, *prepared statements*) dan pemrosesan data fungsional yang efisien.
+
+---
 
 ### 5.2 Paradigma Pemrograman
-| Kandidat | Kelebihan | Kekurangan | Skor Evaluasi (1-5) |
+
+| Kandidat | Kelebihan | Kekurangan | Skor (1-5) |
 |---|---|---|---|
-| **Functional Programming (FP)** | Fungsi bebas dari efek samping (*pure functions*), prediktabilitas luar biasa stabil, *testability* amat tinggi. | Membutuhkan pergeseran pola pikir dari cara pemrograman umum yang berlandaskan orientasi objek. | 5 |
-| Object-Oriented Programming (OOP) | Cara paling dominan untuk memetakan skema objek dunia nyata secara rasional. | Sistem internal berbasis *state* berpotensi tinggi menghasilkan tumpang-tindih data (*race conditions*) pada aplikasi skala 20 modul. | 3 |
-| Procedural Programming | Eksekusi linier berurutan, mudah dioperasikan. | Struktur *codebase* akan seketika tidak terawat manakala logika bisnis berkembang melewati 5 modul dasar. | 2 |
+| **Functional Programming (FP)** | *Pure functions* bebas efek samping, prediktabilitas tinggi, *testability* maksimal. | Membutuhkan pergeseran pola pikir dari OOP yang lebih umum. | 5 |
+| Object-Oriented Programming (OOP) | Cocok untuk memetakan objek dunia nyata. | *Mutable state* berpotensi memicu inkonsistensi data pada 20 modul yang saling terintegrasi. | 3 |
+| Procedural Programming | Eksekusi linier, mudah dioperasikan. | *Codebase* cepat tidak terawat saat logika bisnis berkembang melewati 5 modul. | 2 |
 
 **Keputusan**: Functional Programming
-**Justifikasi**: Pemilik (sebagai pemangku kepentingan utama) mewajibkan penuh secara teknis penerapan FP guna memastikan reliabilitas hasil output. Kode FP meminimalisasi modifikasi variabel tak diundang, hal ini sangat kritis mengamankan ketepatan pelaporan rekonsiliasi kas maupun stok pada fitur integratif.
-**Risiko dan Mitigasi**: Risiko *learning curve* di sisi *Junior Programmer* yang diatasi murni lewat spesifikasi panduan ketat arsitektur dari *AI Agents* perencana kode.
+
+**Justifikasi**: Pemilik mewajibkan FP secara teknis untuk memastikan reliabilitas output. Setiap fungsi harus menerima input dan mengembalikan output tanpa mengubah *state* eksternal (*pure function*). Ini sangat kritis untuk menjaga ketepatan laporan rekonsiliasi kas dan stok. Semua library yang dipilih (mysql-connector-python, python-dotenv, pyjwt, bcrypt) dapat digunakan murni melalui pemanggilan fungsi langsung tanpa instansiasi *class*.
+
+**Aturan Teknis Wajib FP**:
+- Seluruh logika bisnis ditulis sebagai fungsi murni (*pure functions*).
+- Data bersifat *immutable* — gunakan `tuple` dan `dict` baru, bukan modifikasi *in-place*.
+- Tidak ada penggunaan `class` untuk logika bisnis. `dataclass` hanya boleh digunakan sebagai wadah data *read-only* jika diperlukan.
+- Gunakan `map()`, `filter()`, `functools.reduce()` untuk transformasi data koleksi.
+
+**Risiko dan Mitigasi**: *Learning curve* bagi Junior Programmer. Mitigasi: panduan arsitektur ketat dari AI Agent perencana kode sebelum setiap sesi implementasi modul.
+
+---
 
 ### 5.3 Sistem Basis Data (Database)
-| Kandidat | Kelebihan | Kekurangan | Skor Evaluasi (1-5) |
-|---|---|---|---|
-| **MySQL** | Matang, relasional sangat kokoh (menjamin ACID), teruji mengikat integritas transaksi antar modul, dukungan komunitas raksasa. | Membutuhkan instalasi sistem server, pengaturan awal tidak sepraktis layanan *serverless*. | 5 |
-| PostgreSQL | Standar industri mutakhir untuk struktur tabel dan kueri data JSON, sangat canggih. | Fitur berlebihan (*overkill*) untuk proyek UMKM tahap permulaan yang baru hijrah dari Excel. | 4 |
-| SQLite | Sangat instan, portabilitas tanpa *setup*. | Berbahaya untuk stabilitas antrian integritas sistem *Multi-Branch* jika *user session* digabung. | 3 |
-| MongoDB (NoSQL) | Penyimpanan sangat lincah untuk data terpisah. | Sangat rapuh mengamankan jalinan rekonsiliasi transaksi relasional HPP (*Bill of Materials*). | 2 |
 
-**Keputusan**: MySQL
-**Justifikasi**: Kebutuhan manajemen Stok BOM (*Bill of Materials*), *Payroll*, PPOB, Kasir, hingga Modul Hutang berakar kuat pada relasi data ganda. Integritas struktural MySQL mengakomodasi skenario sentralisasi laporan multi-cabang tanpa kendala skalabilitas memori di tahap *local server*.
-**Risiko dan Mitigasi**: Ketidakcocokan versi layanan *engine database* saat migrasi OS. Ditanggulangi via komitmen versi standar yang ditetapkan ([VERSI_TBA]).
+| Kandidat | Kelebihan | Kekurangan | Skor (1-5) |
+|---|---|---|---|
+| **MySQL 8.4 LTS** | Matang, relasional kokoh (jaminan ACID), teruji mengikat integritas transaksi antar modul, komunitas raksasa. | Membutuhkan instalasi server; pengaturan awal tidak sepraktis layanan *serverless*. | 5 |
+| PostgreSQL | Standar industri mutakhir, dukungan JSON kuat. | *Overkill* untuk UMKM tahap awal yang baru migrasi dari Excel. | 4 |
+| SQLite | Instan, portabilitas tanpa *setup*. | Berbahaya untuk stabilitas integritas sistem *Multi-Branch* dengan sesi pengguna bersamaan. | 3 |
+| MongoDB (NoSQL) | Penyimpanan lincah untuk data tidak terstruktur. | Rapuh untuk rekonsiliasi transaksi relasional HPP (*Bill of Materials*). | 2 |
+
+**Keputusan**: MySQL 8.4 LTS (Community Edition)
+
+**Justifikasi**: Kebutuhan manajemen Stok BOM, *Payroll*, PPOB, Kasir, dan Modul Hutang berakar pada relasi data ganda yang membutuhkan jaminan ACID. MySQL 8.4 adalah rilis LTS (*Long-Term Support*) yang dijamin mendapat patch keamanan hingga 2032, menjamin stabilitas jangka panjang proyek. Lisensi: **GPL v2** (gratis, open-source).
+
+**Risiko dan Mitigasi**: Inkonsistensi versi saat migrasi OS. Mitigasi: versi dikunci di **MySQL 8.4 LTS Community Edition** di semua environment.
+
+---
 
 ### 5.4 Antarmuka Pengguna (User Interface)
-| Kandidat | Kelebihan | Kekurangan | Skor Evaluasi (1-5) |
+
+| Kandidat | Kelebihan | Kekurangan | Skor (1-5) |
 |---|---|---|---|
-| **CLI / Console** | Fokus pembangunan absolut pada struktur fungsi kode tanpa terganggu elemen estetis, eksekusi super kilat. | UI teks dapat mempersulit adopsi cepat staf operasional lapangan yang terbiasa klik. | 5 |
-| Web GUI | Presentasi bisnis ramah bagi awam. | Menyita alokasi bulan pertama untuk merakit kerangka HTTP (API) & antarmuka *frontend framework*. | 3 |
-| Desktop GUI | Respons antarmuka sangat mulus untuk *hardware*. | Kode antar *library windowing* (GUI Linux dan Windows) berpotensi rusak dan tak sinkron. | 2 |
+| **CLI / Console** | Fokus pada fungsi bisnis tanpa overhead UI; eksekusi cepat. | Kurva adaptasi lebih tinggi bagi staf non-teknis. | 5 |
+| Web GUI | Ramah pengguna awam. | Membutuhkan bulan pertama untuk merakit kerangka HTTP (API) dan *frontend framework*. | 3 |
+| Desktop GUI | Responsif untuk *hardware*. | Library *windowing* Linux dan Windows berpotensi tidak sinkron. | 2 |
 
 **Keputusan**: CLI / Console
-**Justifikasi**: Desain utama dari kelayakan sistem pada inisiatif pengembangan dasar menekan keras kecepatan pembangunan Modul Inti dengan kendala batasan 1 orang pelaksana (*Junior Programmer*). CLI adalah jalan pintas merealisasikan 20 fitur *backend* dalam 12 bulan secara nyata.
-**Risiko dan Mitigasi**: Perlawanan penyesuaian UX dari kasir & staf produksi. Mitigasinya, penerapan hirarki navigasi berbasis angka intuitif menyerupai format menu akses instan dan prosedur SOP operasional tercetak.
+
+**Justifikasi**: CLI adalah jalur tercepat merealisasikan 20 modul *backend* dalam 12 bulan dengan 1 developer. Antarmuka CLI dirancang dengan navigasi hierarkis berbasis angka (mirip menu USSD) agar intuitif.
+
+**Risiko dan Mitigasi**: Resistensi adaptasi dari kasir dan staf produksi. Mitigasi: navigasi menu angka intuitif dan SOP operasional tercetak.
+
+---
 
 ### 5.5 Library Koneksi Database
-| Kandidat | Kelebihan | Kekurangan | Skor Evaluasi (1-5) |
-|---|---|---|---|
-| **mysql-connector-python** | Driver konektivitas yang disokong secara formal oleh *Oracle*, sangat terjamin kompatibel dan ramah fungsi murni. | *Benchmarking* kueri massal sesekali dinilai sedikit lebih memakan waktu spesifik dibanding *C-extensions*. | 5 |
-| PyMySQL | Modul *pure Python*, paling unggul untuk portabilitas server tanpa kakas kompilasi tambahan. | Eksekusi rilis keamanan dan spesifikasi fitur terbaru kadang lambat menyusul MySQL resminya. | 4 |
-| SQLAlchemy | *Object-Relational Mapping* (ORM) yang mempermudah migrasi tabel. | Paradigma kental berorientasi objek menentang larangan FP dalam arsitektur murni kita. | 1 |
-| aiomysql | *Asynchronous* memicu penanganan volume tinggi tanpa memblokir CPU (*non-blocking*). | Konkurensi I/O yang ditawarkan terlalu superior untuk ekosistem program sederhana CLI UMKM. | 3 |
 
-**Keputusan**: mysql-connector-python
-**Justifikasi**: Mengadopsi library resmi menekan kemungkinan insiden sistem aplikasi terputus (CORS/SSL koneksi basis data mati tiba-tiba). Karena ORM diblokir (akibat OOP), paket konektor dasar seperti ini menjamin kita sepenuhnya bertumpu pada kontrol FP murni dalam memparsing struktur hasil *query tuple* ke data tidak terubah.
-**Risiko dan Mitigasi**: Isu kompatibilitas modul pada versi Python mutakhir (3.14.2+). Semua skema pustaka dipatok secara ketat [VERSI_TBA — gunakan versi stabil terbaru saat implementasi].
+| Kandidat | Kelebihan | Kekurangan | Skor (1-5) |
+|---|---|---|---|
+| **mysql-connector-python** | Driver resmi Oracle; kompatibel penuh dengan MySQL 8.4; mendukung *pure function* via hasil kueri berbentuk `tuple`. | *Benchmarking* kueri massal sedikit lebih lambat dibanding *C-extensions*. | 5 |
+| PyMySQL | *Pure Python*, portabilitas tinggi. | Rilis keamanan lambat menyusul MySQL resmi. | 4 |
+| SQLAlchemy | ORM lengkap, migrasi tabel mudah. | Paradigma ORM kental berorientasi objek; bertentangan mutlak dengan aturan FP proyek ini. | 1 |
+| aiomysql | *Async*, cocok volume tinggi. | Konkurensi I/O *overkill* untuk ekosistem CLI UMKM. | 3 |
+
+**Keputusan**: mysql-connector-python **9.3.0**
+
+**Justifikasi**: Driver resmi menekan risiko koneksi terputus (SSL/TLS). Karena ORM dilarang, konektor dasar ini menjamin kontrol FP murni: hasil kueri dikembalikan sebagai `tuple` Python — struktur data *immutable* yang sepenuhnya kompatibel dengan paradigma FP. Pemanggilan `cursor.execute()` adalah *stateless function call*, bukan *method* pada *class* bisnis.
+
+**Konfirmasi Lisensi**: GNU GPL v2 — gratis, open-source.
+
+**Konfirmasi Kompatibilitas OS**: Tersedia sebagai *wheel* biner untuk Windows 11 (amd64) dan Debian 12 (linux/amd64) tanpa memerlukan kompilasi C.
+
+**Risiko dan Mitigasi**: Isu kompatibilitas pada Python 3.14.2+. Mitigasi: kunci versi di `requirements.txt` — `mysql-connector-python==9.3.0`.
+
+---
 
 ### 5.6 Library Manajemen Konfigurasi
-| Kandidat | Kelebihan | Kekurangan | Skor Evaluasi (1-5) |
-|---|---|---|---|
-| **python-dotenv** | Industri bersepakat sebagai isolasi data kredensial teraman dan paling praktis yang menolak menyatu dengan *source code*. | Sama sekali tidak membawa utilitas paksaan nilai tipe data parameter variabel lingkungan (*Type Checking*). | 5 |
-| configparser | Bagian inti perbekalan Python tanpa perlu dipasang manual (*install*). | Kebiasaan penyimpanan fail `.ini` mengancam keamanan data (rentan ikut *commit* ke Git). | 3 |
-| pydantic-settings | Fitur luar biasa teliti dalam menterjemahkan variabel menjadi kelas bertipe spesifik (*auto-cast*). | Pengikatan modulnya memaksakan arsitektur *class instance*, bertolak belakang pada visi FP. | 2 |
-| dynaconf | Utilitas lengkap melayani skenario spesifikasi JSON, TOML, hingga YAML ganda. | *Overhead* yang berlebihan demi membungkus variabel kredensial bisnis tingkat sederhana. | 2 |
 
-**Keputusan**: python-dotenv
-**Justifikasi**: Membedah rahasia sandi MySQL dan Token Enkripsi ke file tunggal (.env) melepaskan ancaman eksfiltrasi saat repositori diakses anggota tak terduga. Pustaka ringan ini dapat disuntikkan secara fungsional ke seluruh inisiasi skrip program operasi AbuCom.
-**Risiko dan Mitigasi**: Kode .env masuk ke repositori *public/private*. Mitigasinya, file .gitignore secara absolut dipersiapkan menolak membaca entitas ini di sesi pra-*commit* awal pengembangan. Versi pustaka: [VERSI_TBA — gunakan versi stabil terbaru saat implementasi].
+| Kandidat | Kelebihan | Kekurangan | Skor (1-5) |
+|---|---|---|---|
+| **python-dotenv** | Standar industri isolasi kredensial; memisahkan *secret* dari kode sumber. | Tidak melakukan *type-checking* pada variabel *environment*. | 5 |
+| configparser | Bawaan Python, tanpa instalasi tambahan. | File `.ini` rentan ikut ter-*commit* ke Git. | 3 |
+| pydantic-settings | *Auto-cast* tipe data sangat teliti. | Memaksa arsitektur *class instance*; bertentangan dengan FP. | 2 |
+| dynaconf | Mendukung JSON, TOML, YAML. | *Overhead* berlebihan untuk kebutuhan kredensial bisnis sederhana. | 2 |
+
+**Keputusan**: python-dotenv **1.1.0**
+
+**Justifikasi**: Kredensial MySQL dan *token encryption key* disimpan di file `.env` yang wajib masuk `.gitignore`. `load_dotenv()` dan `os.getenv()` adalah *pure function calls* yang tidak bergantung pada *class instance* — sepenuhnya kompatibel dengan FP. File `.env` tidak pernah masuk repositori.
+
+**Konfirmasi Lisensi**: BSD 3-Clause — gratis, open-source.
+
+**Konfirmasi Kompatibilitas OS**: *Pure Python*, berjalan identik di Windows 11 dan Debian 12 tanpa dependensi OS.
+
+**Risiko dan Mitigasi**: File `.env` ter-*commit* ke repositori. Mitigasi: `.gitignore` dikonfigurasi di awal proyek sebelum baris kode pertama ditulis.
+
+---
 
 ### 5.7 Library Keamanan — Hashing Password
-| Kandidat | Kelebihan | Kekurangan | Skor Evaluasi (1-5) |
-|---|---|---|---|
-| **bcrypt** | Konvensi *hashing* terkuat, mencegah serangan kamus/*brute-force*, *work factor* adaptif menyesuaikan daya CPU klien. | Kalah efisien menghalau komputasi GPU massal dibandingkan seri hashing *Argon*. | 5 |
-| argon2-cffi | Secara *de-facto* memenangkan algoritma hash pengaman terkini dengan alokasi ketahanan *memory-hard*. | Syarat instalasi ekosistem C (*compiler*) akan sangat rawan *error* di server Windows lokal milik UMKM. | 4 |
-| hashlib+scrypt | Paket modul standar Python *built-in* meminimalkan pemasangan repositori pihak ketiga. | Pemrograman pengacakan kunci rahasia (*salt padding*) harus dikonfigurasi kustom, memicu lubang celah. | 3 |
-| passlib | Kompendium kerangka utilitas kriptografi sangat ekstensif (*multi-algorithm*). | Tidak menerima peningkatan pemeliharaan aktif, status kode tertinggal (*legacy*). | 2 |
 
-**Keputusan**: bcrypt
-**Justifikasi**: Dalam ekosistem OS multi-sistem (Linux/Windows), modul `bcrypt` Python memberikan kestabilan fungsi instalasi tanpa membebani pemilik usaha merakit utilitas C++ pendukung. Kapasitas sandi yang di-hash cukup aman untuk akses data privat kasir maupun identitas aplikasi PPOB *gateway* internal.
-**Risiko dan Mitigasi**: Peningkatan waktu komputasi saat perangkat *hardware* menurun (*CPU throttling*). Penetapan iterasi *salt-rounds* konstan di ambang aman (skala beban moderat) agar respon *login* CLI cepat. Versi: [VERSI_TBA — gunakan versi stabil terbaru saat implementasi].
+| Kandidat | Kelebihan | Kekurangan | Skor (1-5) |
+|---|---|---|---|
+| **bcrypt** | *Hashing* adaptif berbasis *work factor*; tahan *brute-force* dan serangan kamus. | Sedikit lebih lambat dari Argon2 untuk resistensi GPU massal. | 5 |
+| argon2-cffi | Algoritma *hash* terkuat saat ini (*memory-hard*). | Memerlukan kompilasi C — sangat rawan *error* di server Windows lokal UMKM. | 4 |
+| hashlib+scrypt | Bawaan Python *built-in*. | Konfigurasi *salt padding* manual memicu celah keamanan jika tidak cermat. | 3 |
+| passlib | Kompendium multi-algoritma. | Status *legacy*, tidak menerima pemeliharaan aktif. | 2 |
+
+**Keputusan**: bcrypt **4.3.0**
+
+**Justifikasi**: `bcrypt.hashpw(password, bcrypt.gensalt())` adalah *pure function* — menerima *bytes*, mengembalikan *bytes* tanpa *side effects*. Tidak ada *class* yang perlu diinstansiasi. *Work factor* default (`rounds=12`) aman dan cukup cepat untuk respons *login* CLI. Stabil di Windows 11 dan Debian 12 tanpa perlu *C compiler* manual karena paket tersedia sebagai *pre-compiled wheel*.
+
+**Konfirmasi Lisensi**: Apache 2.0 — gratis, open-source.
+
+**Konfirmasi Kompatibilitas OS**: *Pre-compiled wheel* tersedia di PyPI untuk `win_amd64` dan `linux_x86_64` (Debian 12). Instalasi via `pip install bcrypt==4.3.0` tidak memerlukan `gcc`.
+
+**Penetapan Parameter**: `bcrypt.gensalt(rounds=12)` — nilai 12 adalah standar industri yang menyeimbangkan keamanan dan kecepatan respons pada perangkat keras kelas UMKM.
+
+**Risiko dan Mitigasi**: Peningkatan waktu komputasi saat CPU *throttling*. Mitigasi: *salt rounds* dikunci di `12`, tidak lebih tinggi, agar respons *login* CLI tetap cepat.
+
+---
 
 ### 5.8 Library Keamanan — Autentikasi Token
-| Kandidat | Kelebihan | Kekurangan | Skor Evaluasi (1-5) |
-|---|---|---|---|
-| **pyjwt** | Standar pelacakan aktivitas autentikasi nir-basis data (*stateless*), jejak ringan menopang otoritas spesifik di dalam berkas token rahasia. | Tantangan pencabutan hak token ketika karyawan didepak secara mendadak. | 5 |
-| python-jose | Protokol keamaan berlapis tingkat tinggi dengan balutan JWE (*Json Web Encryption*). | Konfigurasi awal spesifik sangat menyulitkan penelaahan cepat *debugging* CLI oleh Junior. | 3 |
-| authlib | Orkestrasi penyedia manajemen OAuth dan SSO yang menyeluruh. | Spesifikasi platform dirancang sebagai sentral klien web, bukan *user environment* internal terpusat. | 1 |
-| session-based | Manajemen mudah dikendalikan, riwayat tercatat dalam *database*, sesi bisa disingkirkan detik itu juga. | Ketergantungan *database lookup* di setiap navigasi menu memperburuk waktu muat CLI jika berstatus terdistribusi cabang (*Multi-Branch*). | 2 |
 
-**Keputusan**: pyjwt
-**Justifikasi**: Token otorisasi JWT berpadu sempurna membawakan spesifikasi Hak Akses Berbasis Peran (*Role-Based Access Control*) ke aplikasi via variabel lingkungan *pure function* (nir-status). Ini memenuhi parameter *Audit Trail* bahwa setiap pemanggilan kueri sudah dibekali identitas *user* tanpa tambahan proses *server*.
-**Risiko dan Mitigasi**: Pengkopian rahasia token JWT yang dipindah ke komputer karyawan berbeda. Ditetapkan *expiry duration* yang amat singkat (berlaku sesi paruh waktu harian) dan validasi JWT dari *secret-key* lokal terlindungi. Versi: [VERSI_TBA — gunakan versi stabil terbaru saat implementasi].
+| Kandidat | Kelebihan | Kekurangan | Skor (1-5) |
+|---|---|---|---|
+| **pyjwt** | Standar JWT *stateless*; ringan; mendukung RBAC via *payload claims*. | Pencabutan token saat karyawan diberhentikan memerlukan mekanisme *blacklist* tambahan. | 5 |
+| python-jose | Protokol berlapis tinggi dengan JWE (*Json Web Encryption*). | Konfigurasi awal terlalu kompleks untuk *debugging* CLI oleh Junior. | 3 |
+| authlib | Orkestrasi OAuth dan SSO menyeluruh. | Dirancang untuk klien web, bukan *user environment* internal CLI terpusat. | 1 |
+| session-based | Sesi bisa dicabut seketika. | *Database lookup* di setiap navigasi menu memperburuk waktu muat CLI multi-cabang. | 2 |
+
+**Keputusan**: pyjwt **2.10.1**
+
+**Justifikasi**: `jwt.encode(payload, secret, algorithm="HS256")` dan `jwt.decode(token, secret, algorithms=["HS256"])` adalah *pure functions* — menerima `dict` dan `str`, mengembalikan nilai baru tanpa *state mutation*. Token JWT membawa `user_id`, `role`, `branch_id`, dan `exp` di *payload*, memungkinkan validasi RBAC tanpa *database lookup* tambahan di setiap aksi pengguna.
+
+**Konfirmasi Lisensi**: MIT — gratis, open-source.
+
+**Konfirmasi Kompatibilitas OS**: *Pure Python*, berjalan identik di Windows 11 dan Debian 12.
+
+**Penetapan Parameter**: `exp` (expiry) = **8 jam** dari waktu *login* — sesuai durasi 1 shift kerja. Token tidak dapat diperpanjang; karyawan wajib *login* ulang setelah sesi berakhir.
+
+**Risiko dan Mitigasi**: Token dicopy ke perangkat lain. Mitigasi: durasi *expiry* singkat (8 jam) dan validasi `secret_key` dari `.env` lokal yang terlindungi.
+
+---
 
 ### 5.9 Sistem Operasi Target
-| Kandidat | Kelebihan | Kekurangan | Skor Evaluasi (1-5) |
-|---|---|---|---|
-| **Linux Debian 12 Bookworm & Windows 11** | Keselarasan komprehensif mengamankan *budget* penyediaan OS di parameter Rp 0 sesuai infrastruktur eksisting bisnis AbuCom. | Skema konfigurasi *environment pathing* ganda antara dua pilar arsitektur OS. | 5 |
-| Ubuntu Server | Komunitas resolusi galat daring yang masif dan paket standar ekosistem pemula mutakhir. | Menyelisih mandat dokumen kelayakan untuk tidak memasukkan variabel instrumen peranti OS baru. | 3 |
-| CentOS / RHEL | Tingkat retensi keandalan infrastruktur perangkat keras *Enterprise*. | Pendekatan sistem birokrasi pemutakhiran tergolong ekslusif dan memberatkan admin non-IT (pemilik). | 2 |
 
-**Keputusan**: Linux Debian 12 Bookworm & Windows 11
-**Justifikasi**: Kendala bisnis mengharuskan adaptasi implementasi aplikasi berjalan utuh di atas sistem ekosistem ketersediaan alat operasi pemilik di fasilitas layanan percetakan guna menghindari modal tidak langsung (*hardware purchase*).
-**Risiko dan Mitigasi**: Inkonsistensi resolusi nama rute direktori berkas (*path naming*) Windows dan Linux yang merusak fungsional navigasi sistem lokal. Hal ini dieksekusi via perpustakaan `pathlib` Python untuk menangani pembatas format *slash/backslash* independen.
+| Kandidat | Kelebihan | Kekurangan | Skor (1-5) |
+|---|---|---|---|
+| **Linux Debian 12 Bookworm & Windows 11 24H2** | Selaras penuh dengan infrastruktur *existing* bisnis AbuCom; biaya Rp 0. | Skema konfigurasi *path* berbeda antara dua OS (slash vs backslash). | 5 |
+| Ubuntu Server | Komunitas besar, paket standar mudah. | Menyelisih mandat dokumen kelayakan untuk tidak menambah variabel OS baru. | 3 |
+| CentOS / RHEL | Andal untuk infrastruktur *Enterprise*. | Pemutakhiran eksklusif dan memberatkan admin non-IT. | 2 |
+
+**Keputusan**: Linux Debian 12 Bookworm (kernel 6.1 LTS) & Windows 11 24H2
+
+**Justifikasi**: Kedua OS sudah tersedia di infrastruktur bisnis AbuCom tanpa biaya tambahan. Debian 12 adalah rilis LTS yang dijamin mendapat dukungan keamanan hingga 2028. Windows 11 24H2 adalah versi stabil terkini untuk lingkungan desktop.
+
+**Penanganan Perbedaan Path**: Seluruh operasi *file path* wajib menggunakan `pathlib.Path()` dari Python *standard library* — secara otomatis menangani perbedaan `\` (Windows) dan `/` (Linux) tanpa kode kondisional.
+
+**Risiko dan Mitigasi**: Inkonsistensi resolusi *path* direktori. Mitigasi: `pathlib.Path()` wajib di semua modul yang membaca/menulis file; penggunaan `os.path` string literal dilarang.
+
+---
 
 ### 5.10 Strategi Arsitektur Skalabilitas
-| Kandidat | Kelebihan | Kekurangan | Skor Evaluasi (1-5) |
+
+| Kandidat | Kelebihan | Kekurangan | Skor (1-5) |
 |---|---|---|---|
-| **Multi-Branch Ready** | Mendemonstrasikan arsitektur fundamental pro-peluasan tanpa perombakan skema tabel MySQL ulang (*re-design db*). | Relasi entitas pada kode awal Python menyisipkan deklarasi ID wajib di seluruh parameter dasar. | 5 |
-| Single-Tenant | Sangat lugas dan instan bagi arsitektur toko *local-only*. | Berpotensi membangkrutkan usaha saat konsolidasi *multi-store* dikemudian hari dipaksa berjalan. | 2 |
-| Microservices | Pertumbuhan *server* terdistribusi sangat independen bagi konglomerasi korporat aplikasi level makro. | Memakan porsi integrasi kerangka ekosistem *over-engineering* parah dan tidak mungkin direalisasikan oleh *AI-augmented solo dev*. | 1 |
+| **Multi-Branch Ready** | Fondasi siap ekspansi tanpa *re-design* skema database. | Setiap tabel wajib menyertakan kolom `branch_id` dari awal. | 5 |
+| Single-Tenant | Sangat lugas untuk arsitektur toko tunggal. | Mustahil dikembangkan ke multi-cabang tanpa *overhaul* total. | 2 |
+| Microservices | Independen dan terdistribusi sangat baik. | *Over-engineering* parah; tidak mungkin dikerjakan oleh *solo AI-augmented dev*. | 1 |
 
 **Keputusan**: Multi-Branch Ready
-**Justifikasi**: *Stakeholder* mensyaratkan dengan mutlak fondasi data base terstruktur dalam ikatan penugasan Multi-Branch (menyimpan referensi `branch_id`). Ini membuka jalan kesiapan transisi sentralisasi pusat komando saat AbuCom bertransformasi ke fase cabang-cabang baru dengan laporan pelacakan per terminal kasir utuh.
-**Risiko dan Mitigasi**: Eksekusi kueri terisolasi tercampur data cabang imajiner. Dibentuk fungsi kontrol filter lapisan modul basis data secara presisi, yang menyuplai penanda unit cabang spesifik ke argumen fungsi per transaksi secara transparan.
+
+**Justifikasi**: Pemilik mewajibkan fondasi data terstruktur dengan penugasan `branch_id`. Ini membuka kesiapan transisi ke fase cabang baru tanpa perombakan skema.
+
+**Konfigurasi Implementasi**: Setiap tabel utama (transaksi, stok, karyawan, aset, keuangan, laporan) wajib memiliki kolom `branch_id INT NOT NULL` yang mereferensi tabel `branches(id)`. Fungsi-fungsi modul menerima `branch_id` sebagai parameter eksplisit, bukan variabel global.
+
+**Risiko dan Mitigasi**: Kueri tercampur data antar cabang. Mitigasi: setiap fungsi modul database menerima `branch_id` sebagai argumen wajib; tidak ada kueri tanpa filter `WHERE branch_id = ?`.
+
+---
 
 ### 5.11 Model Pengembangan (Development Model)
-| Kandidat | Kelebihan | Kekurangan | Skor Evaluasi (1-5) |
+
+| Kandidat | Kelebihan | Kekurangan | Skor (1-5) |
 |---|---|---|---|
-| **AI-Augmented Development** | Daya komputasi perancangan terdistribusi tanpa henti, kapabilitas berstandar tim insinyur tingkat *senior*, biaya HR Rp 0. | Hasil modul bergantung erat pada kejernihan spesifikasi dokumen dan kualitas *prompt context* pengemudi eksekutor (Junior Programmer). | 5 |
-| Solo Junior Programmer | Komunikasi *bug* satu arah tanpa perselisihan argumen teknis kerangka. | Volume 20 modul terlalu raksasa dikendalikan dalam parameter 12 bulan oleh pemula *coding*. | 1 |
-| Vendor Outsourcing (Software House) | Jaminan *SLA (Service Level Agreement)* kontrak terima beres, lepas tangan dari urusan server. | Melanggar kerangka utama batas persediaan modal inisiatif, rentan penguncian ekosistem lisensi tertutup (*vendor lock-in*). | 1 |
+| **AI-Augmented Development** | Kapabilitas setara tim senior; biaya HR Rp 0; tersedia 24/7. | Kualitas output bergantung pada kejernihan spesifikasi dokumen dan kualitas *prompt*. | 5 |
+| Solo Junior Programmer | Komunikasi *bug* satu arah tanpa konflik teknis. | Volume 20 modul tidak realistis dalam 12 bulan tanpa bantuan AI. | 1 |
+| Vendor Outsourcing | SLA kontrak terima beres. | Melanggar batas modal; rentan *vendor lock-in*. | 1 |
 
 **Keputusan**: AI-Augmented Development (1 Junior Programmer + 6 Agen AI)
-**Justifikasi**: Tim pengembang dirancang dengan kolaborasi orkestrasi: 1 Junior Programmer (sebagai *Project Manager/Driver*) dipadu dukungan kognitif 6 Agen (Gemini Pro High merumuskan arsitektur, Gemini Pro Low di level dokumentasi, Gemini Flash pemecah kebuntuan *bug*, Claude Sonnet menangani eksekusi mendalam FP, Claude Opus penjaga audit *security*, dan GPT-OSS pengisi pustaka). Metode ini memenuhi syarat ekonomi mutlak anggaran tenaga pengembangan Rp 0.
-**Risiko dan Mitigasi**: Risiko agen mengalami halusinasi dan melanggar ketetapan batasan fungsional arsitektur saat kode ditulis. Strategi mitigasinya dipatok dengan mengharuskan eksekusi penyuntikan parameter *referensi project charter* ini sebelum setiap *prompt* penulisan fungsi aplikasi dikerjakan.
+
+**Justifikasi**: Tim dirancang dengan orkestrasi: 1 Junior Programmer (sebagai *Project Manager/Driver*) dipadu 6 Agen AI (Gemini 3.1 Pro High — arsitektur & logika berat; Gemini 3.1 Pro Low — dokumentasi & rutin; Gemini 3 Flash — *debugging* cepat; Claude Sonnet 4.6 Thinking — *deep coding* & *refactoring* FP; Claude Opus 4.6 Thinking — audit keamanan & strategi sistem; GPT-OSS 120B Medium — *boilerplate* & data *dummy*). Metode ini memenuhi syarat ekonomi anggaran tenaga pengembangan Rp 0.
+
+**Risiko dan Mitigasi**: Agen AI berhalusinasi dan melanggar batasan FP saat menulis kode. Mitigasi: wajib menyuntikkan dokumen *project charter* dan dokumen ini sebagai konteks sebelum setiap sesi *prompt* penulisan fungsi.
 
 ## Matriks Ringkasan Keputusan (Decision Summary Matrix)
-| Komponen | Teknologi Terpilih | Versi/Spesifikasi | Status Lisensi | Tingkat Risiko |
+
+| Komponen | Teknologi Terpilih | Versi / Spesifikasi | Lisensi | Risiko |
 |---|---|---|---|---|
-| Bahasa Pemrograman | Python | 3.14.2+ | Open-Source (Rp 0) | Rendah |
-| Paradigma Pemrograman | Functional Programming | N/A | Paradigma Umum | Sedang |
-| Database | MySQL | [VERSI_TBA] | Open-Source (Rp 0) | Rendah |
+| Bahasa Pemrograman | Python | 3.14.2+ | PSF (Open-Source, Rp 0) | Rendah |
+| Paradigma Pemrograman | Functional Programming | N/A — Paradigma Umum | N/A | Sedang |
+| Database | MySQL Community Edition | 8.4 LTS | GPL v2 (Rp 0) | Rendah |
 | Antarmuka Pengguna | CLI / Console | N/A | N/A | Sedang |
-| Library Konektor DB | mysql-connector-python | [VERSI_TBA — gunakan versi stabil terbaru saat implementasi] | Open-Source (Rp 0) | Rendah |
-| Library Manajemen Konfigurasi | python-dotenv | [VERSI_TBA — gunakan versi stabil terbaru saat implementasi] | Open-Source (Rp 0) | Rendah |
-| Library Keamanan (Hashing) | bcrypt | [VERSI_TBA — gunakan versi stabil terbaru saat implementasi] | Open-Source (Rp 0) | Rendah |
-| Library Keamanan (Token) | pyjwt | [VERSI_TBA — gunakan versi stabil terbaru saat implementasi] | Open-Source (Rp 0) | Rendah |
-| OS Target Deployment | Linux Debian 12 & Windows 11 | [SPESIFIKASI_TBA] | Tersedia (Existing) / Open-Source | Rendah |
-| Strategi Arsitektur Skalabilitas | Multi-Branch Ready | [KONFIGURASI_TBA] | N/A | Sedang |
-| Model Pengembangan Sistem | AI-Augmented Development | 1 Junior + 6 Agen AI | Akses Ekosistem | Tinggi |
+| Library Konektor DB | mysql-connector-python | 9.3.0 | GPL v2 (Rp 0) | Rendah |
+| Library Manajemen Konfigurasi | python-dotenv | 1.1.0 | BSD 3-Clause (Rp 0) | Rendah |
+| Library Keamanan (Hashing) | bcrypt | 4.3.0 | Apache 2.0 (Rp 0) | Rendah |
+| Library Keamanan (Token) | pyjwt | 2.10.1 | MIT (Rp 0) | Rendah |
+| OS Target Deployment | Linux Debian 12 Bookworm & Windows 11 | Debian 12.9 / Windows 11 24H2 | Tersedia *Existing* / Open-Source | Rendah |
+| Strategi Skalabilitas | Multi-Branch Ready | `branch_id INT NOT NULL` di setiap tabel utama | N/A | Sedang |
+| Model Pengembangan | AI-Augmented Development | 1 Junior Programmer + 6 Agen AI | Akses Ekosistem | Tinggi |
 
 ## Kendala dan Batasan (Constraints)
-- Pelarangan mutlak eksploitasi OOP, wajib menggunakan **Functional Programming** sebagai penyusun logika dan pengelolaan modul program.
-- Syarat pendanaan **Rp 0** terhadap kompensasi perangkat lunak basis operasi (seluruh komponen mutlak berafiliasi **Open-Source**).
-- Penolakan kerangka kerja integrasi *Graphic User Interface (GUI)* untuk fase tahap pertama ini, semua rute sistem operasional mutlak via terminal **CLI/Console**.
-- Aplikasi dirancang murni bagi landasan mesin berfasilitas operasional lingkungan sistem lokal Windows 11 dan mesin komputasi Linux Debian 12 Bookworm.
+
+- **Paradigma FP Wajib**: Pelarangan mutlak OOP. Seluruh logika bisnis ditulis sebagai *pure functions*. Tidak ada `class` untuk logika bisnis.
+- **Anggaran Rp 0**: Seluruh komponen wajib *open-source* dan gratis. Tidak ada versi *Enterprise* berbayar.
+- **CLI-Only (Fase 1)**: Tidak ada GUI, Web, atau Mobile pada fase pertama. Semua akses via terminal.
+- **Kompatibilitas Lintas OS**: Kode wajib berjalan tanpa *error* di Debian 12.9 dan Windows 11 24H2. Gunakan `pathlib` untuk semua operasi *path*.
+- **Versi Terkunci**: Semua library dikunci di versi yang tertera pada dokumen ini di `requirements.txt` untuk mencegah regresi akibat pembaruan otomatis.
 
 ## Riwayat Versi
+
 | Versi | Tanggal | Diubah Oleh | Keterangan |
 |---|---|---|---|
-| 1.0.0 | 2026-05-12 | Senior Enterprise Architect & Senior Technical Lead (AI) | Pembuatan draf dokumen *Tech Stack Decision* berdasarkan rujukan spesifikasi terpusat ekosistem SDLC (Siklus Pelaksanaan *Planning*). |
+| 1.0.0 | 2026-05-12 | Senior Enterprise Architect & Senior Technical Lead (AI) | Pembuatan draf dokumen *Tech Stack Decision* berdasarkan rujukan spesifikasi terpusat ekosistem SDLC. |
+| 1.1.0 | 2026-05-12 | Senior System Architect & Technical Auditor AI (Claude Sonnet 4.6 — Validasi Issue #8) | Validasi teknis arsitektur: pengisian semua placeholder versi spesifik, konfirmasi lisensi dan kompatibilitas OS per library, penegasan aturan teknis FP, penetapan konfigurasi Multi-Branch Ready, penambahan parameter token JWT, dan penyesuaian tata bahasa. |
 
 ## Referensi Dokumen
+
 Dokumen ini disusun dan divalidasi berdasarkan:
 - `docs/sdlc/narasi.txt`
 - `docs/sdlc/01_planning/01_project_charter.md`
