@@ -1,0 +1,172 @@
+@startuml
+' ============================================
+' METADATA DIAGRAM
+' ============================================
+' Judul: Workflow Diagram - Sistem Manajemen Usaha Percetakan AbuCom
+' Versi: 1.0.0
+' Status: [draft]
+' Tanggal Dibuat: 2026-05-13
+' Disusun Oleh: Senior Business Process Analyst & Senior System Analyst (AI)
+' ============================================
+
+skinparam defaultTextAlignment center
+skinparam ArrowColor Teal
+skinparam ActivityBackgroundColor LightCyan
+skinparam ActivityBorderColor DarkCyan
+
+|Karyawan|
+|Sistem|
+
+partition "1. Alur Transaksi Utama (Kasir & Job Tracking)" {
+    |Karyawan|
+    start
+    :Menerima pesanan dari pelanggan;
+    :Memilih tipe layanan (Percetakan/ATK/PPOB/Jasa Keuangan/Jasa Teknis);
+    
+    |Sistem|
+    :Menampilkan form input CLI;
+    
+    |Karyawan|
+    :Menginput ID Layanan, Kuantitas, dan Data Pelanggan;
+    
+    |Sistem|
+    if (Kuantitas >= 50 ATAU Pelanggan Mitra Aktif >= 3 bulan?) then (Ya)
+        :Menerapkan Harga Grosir / Harga Spesial Mitra;
+    else (Tidak)
+        :Menerapkan Harga Retail Normal;
+    endif
+    :Menghitung Subtotal;
+    
+    |Karyawan|
+    if (Kategori Layanan?) then (Percetakan)
+        :Menanyakan opsi pembayaran (DP/Lunas);
+        if (Opsi Pembayaran?) then (DP)
+            :Menerima Uang Muka (DP) minimal 50%;
+            |Sistem|
+            :Mencatat Transaksi (Status Pembayaran: DP);
+        else (Lunas)
+            :Menerima pembayaran pelunasan penuh;
+            |Sistem|
+            :Mencatat Transaksi (Status Pembayaran: Lunas);
+        endif
+        
+        |Sistem|
+        :Menghitung HPP berdasarkan Bill of Materials (BOM);
+        :Mengurangi stok bahan baku secara presisi;
+        :Mencetak struk digital pada CLI;
+        :Mengatur status pesanan = "Antri";
+        
+        |Karyawan|
+        :Memulai pengerjaan desain pesanan;
+        |Sistem|
+        :Memperbarui status pesanan = "Proses Desain";
+        
+        |Karyawan|
+        :Melakukan proses cetak / produksi;
+        |Sistem|
+        :Memperbarui status pesanan = "Produksi";
+        
+        |Karyawan|
+        if (Ada bahan rusak/gagal cetak?) then (Ya)
+            :Mencatat limbah produksi (Waste Management);
+            |Sistem|
+            :Mengurangi stok untuk bahan yang rusak;
+        else (Tidak)
+        endif
+        
+        |Karyawan|
+        :Menyelesaikan produksi pesanan;
+        |Sistem|
+        :Memperbarui status pesanan = "Selesai";
+        
+        |Karyawan|
+        :Menghubungi pelanggan untuk pengambilan;
+        :Menerima sisa pelunasan tagihan (jika ada);
+        
+        |Sistem|
+        :Memperbarui status pembayaran = "Lunas";
+        :Memperbarui status pesanan = "Diambil";
+        :Menyimpan letak path arsip file desain pelanggan;
+        
+    else (ATK / PPOB / Jasa Keuangan / Jasa Teknis)
+        |Karyawan|
+        :Menerima pembayaran penuh (Lunas);
+        
+        |Sistem|
+        :Mencatat Transaksi (Status Pembayaran: Lunas);
+        
+        if (Layanan PPOB / Jasa Keuangan?) then (Ya)
+            :Mengurangi saldo akun digital / PPOB;
+            if (Sisa saldo < Rp 150.000?) then (Ya)
+                :Menampilkan peringatan (Warning) batas saldo minimum;
+                |Karyawan|
+                :Melakukan deposit minimal Rp 500.000\n[Dilakukan di luar alur sistem CLI];
+            else (Tidak)
+            endif
+        else (ATK)
+            |Sistem|
+            :Menghitung HPP;
+            :Mengurangi stok barang retail;
+        endif
+        
+        |Sistem|
+        :Mencetak struk digital pada CLI;
+        
+        |Karyawan|
+        :Menyerahkan barang / pulsa / bukti transfer ke pelanggan;
+    endif
+    
+    |Sistem|
+    :Menyimpan data riwayat transaksi pelanggan (CRM);
+    stop
+}
+
+partition "2. Alur Pembatalan Pesanan & Retur Barang" {
+    |Karyawan|
+    start
+    :Menerima keluhan atau permintaan pelanggan;
+    
+    if (Jenis Permintaan?) then (Pembatalan Pesanan Percetakan)
+        |Sistem|
+        :Mengecek status tahapan pesanan;
+        if (Status pesanan >= "Proses Desain"?) then (Ya)
+            :Menolak pengembalian DP (Aturan: DP Hangus);
+            |Karyawan|
+            :Menginformasikan bahwa DP hangus\nkarena proses desain/cetak sudah berjalan;
+        else (Tidak)
+            |Sistem|
+            :Menyetujui pembatalan pesanan;
+            |Karyawan|
+            :Mengembalikan uang DP kepada pelanggan;
+            |Sistem|
+            :Memperbarui status pesanan menjadi Dibatalkan;
+        endif
+        
+    else (Retur Barang Rusak / Salah Cetak)
+        |Sistem|
+        :Mengecek batas waktu maksimal 1x24 jam\nsejak barang diambil pelanggan;
+        if (Masih dalam 1x24 jam & Kelalaian Internal?) then (Ya)
+            :Menyetujui retur tanpa biaya tambahan (Diganti 100%);
+            |Karyawan|
+            :Mencetak ulang barang pengganti;
+            :Mencatat barang rusak lama sebagai limbah;
+            |Sistem|
+            :Mengurangi stok bahan baku untuk barang pengganti;
+            :Menambah catatan ke modul Waste Management;
+        else (Tidak)
+            :Menolak permohonan retur;
+            |Karyawan|
+            :Memberikan penjelasan penolakan kepada pelanggan;
+        endif
+    endif
+    stop
+}
+
+' ==========================================
+' REFERENSI DOKUMEN:
+' 1. docs/sdlc/02_analysis/01_business_requirements.md
+' 2. docs/sdlc/02_analysis/02_software_requirements.md
+' 3. docs/sdlc/02_analysis/03_use_case_diagram.puml
+' 4. docs/sdlc/narasi.txt
+' ==========================================
+@enduml
