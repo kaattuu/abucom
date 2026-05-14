@@ -1,3 +1,370 @@
 @startuml
-' ERD Database
+' =================================================================================
+' Nama Proyek: AbuCom — Sistem Manajemen Usaha Percetakan
+' Deskripsi: Entity Relationship Diagram (ERD) — Visualisasi Relasi Seluruh Entitas Database
+' Versi: 1.0.0
+' Status: [draft]
+' Database Target: MySQL 8.4 LTS Community Edition
+' Total Entitas: 28 tabel
+' Total Relasi: 39 relasi
+' Tanggal Pembuatan: 2026-05-14
+' Persona: Senior Database Architect & Senior Data Modeler
+' =================================================================================
+
+left to right direction
+skinparam linetype ortho
+
+skinparam package {
+    BackgroundColor White
+    BorderColor Black
+}
+
+skinparam entity {
+    BackgroundColor LightYellow
+    BorderColor Black
+    HeaderBackgroundColor LightBlue
+}
+
+package "Entitas Master" #E6F3FF {
+    entity "branches" as branches {
+        * id : INT <<PK>>
+        --
+        * branch_name : VARCHAR(100)
+        * address : TEXT
+        phone_number : VARCHAR(20)
+        * is_active : BOOLEAN
+        * created_at : DATETIME
+    }
+
+    entity "users" as users {
+        * id : INT <<PK>>
+        --
+        * branch_id : INT <<FK>>
+        * username : VARCHAR(50)
+        * password_hash : VARCHAR(255)
+        * role : ENUM
+        * is_active : BOOLEAN
+        * created_at : DATETIME
+        * updated_at : DATETIME
+    }
+
+    entity "pricing_tiers" as pricing_tiers {
+        * id : INT <<PK>>
+        --
+        * branch_id : INT <<FK>>
+        * tier_name : ENUM
+        * min_qty : DECIMAL(15,4)
+        * min_active_months : INT
+        description : TEXT
+    }
+
+    entity "customers" as customers {
+        * id : INT <<PK>>
+        --
+        * branch_id : INT <<FK>>
+        * pricing_tier_id : INT <<FK>>
+        * full_name : VARCHAR(150)
+        whatsapp_number : VARCHAR(20)
+        * registered_date : DATE
+    }
+
+    entity "vendors" as vendors {
+        * id : INT <<PK>>
+        --
+        * branch_id : INT <<FK>>
+        * vendor_name : VARCHAR(150)
+        contact_person : VARCHAR(100)
+        phone_number : VARCHAR(20)
+        address : TEXT
+        * is_active : BOOLEAN
+    }
+
+    entity "employees" as employees {
+        * id : INT <<PK>>
+        --
+        * branch_id : INT <<FK>>
+        user_id : INT <<FK>>
+        * full_name : VARCHAR(150)
+        * position : VARCHAR(100)
+        * salary_schema : ENUM
+        * base_salary : DECIMAL(15,4)
+        * join_date : DATE
+    }
+
+    entity "products_services" as products_services {
+        * id : INT <<PK>>
+        --
+        * branch_id : INT <<FK>>
+        * service_type : ENUM
+        * name : VARCHAR(150)
+        * base_price : DECIMAL(15,4)
+        * stock_quantity : DECIMAL(15,4)
+        unit_of_measure : VARCHAR(20)
+        * is_active : BOOLEAN
+    }
+
+    entity "materials" as materials {
+        * id : INT <<PK>>
+        --
+        * branch_id : INT <<FK>>
+        vendor_id : INT <<FK>>
+        * material_name : VARCHAR(150)
+        * stock_quantity : DECIMAL(15,4)
+        * unit_of_measure : VARCHAR(20)
+        * cost_per_unit : DECIMAL(15,4)
+        * min_stock_alert : DECIMAL(15,4)
+    }
+
+    entity "ppob_accounts" as ppob_accounts {
+        * id : INT <<PK>>
+        --
+        * branch_id : INT <<FK>>
+        * platform_name : ENUM
+        * account_number : VARCHAR(50)
+        * current_balance : DECIMAL(15,4)
+        * min_balance : DECIMAL(15,4)
+        * deposit_recommend : DECIMAL(15,4)
+    }
+
+    entity "assets" as assets {
+        * id : INT <<PK>>
+        --
+        * branch_id : INT <<FK>>
+        * asset_name : VARCHAR(150)
+        * purchase_date : DATE
+        * purchase_price : DECIMAL(15,4)
+        condition_status : ENUM
+    }
+}
+
+package "Entitas Transaksi" #E6FFE6 {
+    entity "transactions" as transactions {
+        * id : INT <<PK>>
+        --
+        * branch_id : INT <<FK>>
+        * user_id : INT <<FK>>
+        * customer_id : INT <<FK>>
+        * transaction_date : DATETIME
+        * total_amount : DECIMAL(15,4)
+        * total_hpp : DECIMAL(15,4)
+        * payment_status : ENUM
+    }
+
+    entity "transaction_items" as transaction_items {
+        * id : INT <<PK>>
+        --
+        * transaction_id : INT <<FK>>
+        * product_id : INT <<FK>>
+        * quantity : DECIMAL(15,4)
+        * unit_price : DECIMAL(15,4)
+        * subtotal : DECIMAL(15,4)
+        * item_hpp : DECIMAL(15,4)
+    }
+
+    entity "payments" as payments {
+        * id : INT <<PK>>
+        --
+        * transaction_id : INT <<FK>>
+        * payment_date : DATETIME
+        * amount_paid : DECIMAL(15,4)
+        * payment_type : ENUM
+    }
+
+    entity "orders_job_tracking" as orders_job_tracking {
+        * id : INT <<PK>>
+        --
+        * transaction_id : INT <<FK>>
+        * status : ENUM
+        design_file_path : VARCHAR(255)
+        * updated_at : DATETIME
+    }
+
+    entity "production_waste" as production_waste {
+        * id : INT <<PK>>
+        --
+        * branch_id : INT <<FK>>
+        * material_id : INT <<FK>>
+        * waste_quantity : DECIMAL(15,4)
+        * waste_reason : TEXT
+        * recorded_at : DATETIME
+    }
+
+    entity "ppob_mutations" as ppob_mutations {
+        * id : INT <<PK>>
+        --
+        * ppob_account_id : INT <<FK>>
+        transaction_id : INT <<FK>>
+        * mutation_type : ENUM
+        * amount : DECIMAL(15,4)
+        * mutation_date : DATETIME
+        description : TEXT
+    }
+
+    entity "employee_attendance" as employee_attendance {
+        * id : INT <<PK>>
+        --
+        * employee_id : INT <<FK>>
+        * check_in_time : DATETIME
+        check_out_time : DATETIME
+        * work_date : DATE
+    }
+
+    entity "employee_loans" as employee_loans {
+        * id : INT <<PK>>
+        --
+        * employee_id : INT <<FK>>
+        * loan_amount : DECIMAL(15,4)
+        * remaining_amount : DECIMAL(15,4)
+        * loan_date : DATE
+    }
+
+    entity "payroll" as payroll {
+        * id : INT <<PK>>
+        --
+        * employee_id : INT <<FK>>
+        * period_month : VARCHAR(7)
+        * base_payment : DECIMAL(15,4)
+        * incentive_bonus : DECIMAL(15,4)
+        * loan_deduction : DECIMAL(15,4)
+        * net_salary : DECIMAL(15,4)
+        * processed_at : DATETIME
+    }
+
+    entity "cash_reconciliation" as cash_reconciliation {
+        * id : INT <<PK>>
+        --
+        * branch_id : INT <<FK>>
+        * user_id : INT <<FK>>
+        * system_balance : DECIMAL(15,4)
+        * physical_balance : DECIMAL(15,4)
+        * difference : DECIMAL(15,4)
+        * reconciled_at : DATETIME
+    }
+
+    entity "stock_opname" as stock_opname {
+        * id : INT <<PK>>
+        --
+        * branch_id : INT <<FK>>
+        * material_id : INT <<FK>>
+        * system_qty : DECIMAL(15,4)
+        * actual_qty : DECIMAL(15,4)
+        * difference_qty : DECIMAL(15,4)
+        * recorded_at : DATETIME
+    }
+}
+
+package "Entitas Pendukung" #FFE6E6 {
+    entity "bom" as bom {
+        * id : INT <<PK>>
+        --
+        * product_id : INT <<FK>>
+        * material_id : INT <<FK>>
+        * required_qty : DECIMAL(15,4)
+    }
+
+    entity "incentive_points" as incentive_points {
+        * id : INT <<PK>>
+        --
+        * employee_id : INT <<FK>>
+        transaction_id : INT <<FK>>
+        * point_category : ENUM
+        * earned_points : INT
+        * earned_date : DATETIME
+    }
+
+    entity "login_sessions" as login_sessions {
+        * id : INT <<PK>>
+        --
+        * user_id : INT <<FK>>
+        * jwt_token : VARCHAR(512)
+        * expires_at : DATETIME
+    }
+
+    entity "routine_expenses" as routine_expenses {
+        * id : INT <<PK>>
+        --
+        * branch_id : INT <<FK>>
+        * expense_name : VARCHAR(150)
+        * amount : DECIMAL(15,4)
+        * expense_date : DATE
+    }
+
+    entity "loans" as loans {
+        * id : INT <<PK>>
+        --
+        * branch_id : INT <<FK>>
+        * loan_source : VARCHAR(150)
+        * loan_type : ENUM
+        * principal_amount : DECIMAL(15,4)
+        * remaining_debt : DECIMAL(15,4)
+    }
+
+    entity "audit_trail" as audit_trail {
+        * id : INT <<PK>>
+        --
+        * user_id : INT <<FK>>
+        * action_type : ENUM
+        * target_entity : VARCHAR(50)
+        * change_detail : TEXT
+        * timestamp : DATETIME
+    }
+
+    entity "asset_savings" as asset_savings {
+        * id : INT <<PK>>
+        --
+        * branch_id : INT <<FK>>
+        * account_name : VARCHAR(150)
+        * balance : DECIMAL(15,4)
+        * last_updated : DATETIME
+    }
+}
+
+' Relasi ke branches (16 relasi Many-to-One)
+branches ||--o{ users : "branch_id"
+branches ||--o{ pricing_tiers : "branch_id"
+branches ||--o{ customers : "branch_id"
+branches ||--o{ vendors : "branch_id"
+branches ||--o{ employees : "branch_id"
+branches ||--o{ products_services : "branch_id"
+branches ||--o{ materials : "branch_id"
+branches ||--o{ ppob_accounts : "branch_id"
+branches ||--o{ assets : "branch_id"
+branches ||--o{ transactions : "branch_id"
+branches ||--o{ production_waste : "branch_id"
+branches ||--o{ cash_reconciliation : "branch_id"
+branches ||--o{ stock_opname : "branch_id"
+branches ||--o{ routine_expenses : "branch_id"
+branches ||--o{ loans : "branch_id"
+branches ||--o{ asset_savings : "branch_id"
+
+' Relasi lainnya (23 relasi)
+pricing_tiers ||--o{ customers : "pricing_tier_id"
+users |o--|| employees : "user_id"
+vendors |o--o{ materials : "vendor_id"
+users ||--o{ transactions : "user_id"
+customers ||--o{ transactions : "customer_id"
+transactions ||--o{ transaction_items : "transaction_id"
+products_services ||--o{ transaction_items : "product_id"
+transactions ||--o{ payments : "transaction_id"
+transactions ||--|| orders_job_tracking : "transaction_id"
+materials ||--o{ production_waste : "material_id"
+ppob_accounts ||--o{ ppob_mutations : "ppob_account_id"
+transactions |o--o{ ppob_mutations : "transaction_id"
+employees ||--o{ employee_attendance : "employee_id"
+employees ||--o{ employee_loans : "employee_id"
+employees ||--o{ payroll : "employee_id"
+users ||--o{ cash_reconciliation : "user_id"
+materials ||--o{ stock_opname : "material_id"
+products_services ||--o{ bom : "product_id"
+materials ||--o{ bom : "material_id"
+employees ||--o{ incentive_points : "employee_id"
+transactions |o--o{ incentive_points : "transaction_id"
+users ||--o{ login_sessions : "user_id"
+users ||--o{ audit_trail : "user_id"
+
+' =================================================================
+' REFERENSI DOKUMEN:
+' 1. docs/sdlc/03_design/01_database_schema.sql (Referensi Utama #1)
+' 2. docs/sdlc/02_analysis/05_data_dictionary.md (Referensi Utama #2)
+' =================================================================
 @enduml
