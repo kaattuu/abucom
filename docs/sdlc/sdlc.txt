@@ -19,7 +19,7 @@ sdlc/
 │
 ├── 03_design/
 │   │
-│   ├── 01_database_schema.sql             [dokumen_utama]    status: [create_file]
+│   ├── 01_database_schema.sql             [dokumen_utama]    status: [draft]
 │   ├── 02_erd_database.puml               [dokumen_utama]    status: [check]
 │   ├── 03_system_architecture.md          [dokumen_utama]    status: [check]
 │   ├── 04_cli_interaction_flow.puml       [dokumen_utama]    status: [check]
