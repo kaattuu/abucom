@@ -15,7 +15,7 @@ sdlc/
 │   ├── 03_use_case_diagram.puml           [dokumen_utama]    status: [finish]
 │   ├── 04_workflow_diagram.puml           [dokumen_utama]    status: [finish]
 │   ├── 05_data_dictionary.md              [dokumen_utama]    status: [finish]
-│   └── 06_access_control_matrix.md        [dokumen_utama]    status: [draft]
+│   └── 06_access_control_matrix.md        [dokumen_utama]    status: [finish]
 │
 ├── 03_design/
 │   │

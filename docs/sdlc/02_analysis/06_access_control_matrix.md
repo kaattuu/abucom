@@ -4,8 +4,8 @@
 
 | Atribut              | Detail                                                  |
 | -------------------- | ------------------------------------------------------- |
-| **Versi**            | 1.1.0                                                   |
-| **Status**           | [draft]                                                |
+| **Versi**            | 1.2.0                                                   |
+| **Status**           | [finish]                                                |
 | **Tanggal Dibuat**   | 2026-05-14                                              |
 | **Disusun Oleh**     | Senior Information Security Analyst, Senior RBAC Architect, & Senior Business Analyst |
 
@@ -65,23 +65,23 @@ Tabel berikut memetakan tingkat otorisasi akses dari masing-masing peran terhada
 | :--- | :--- | :---: | :---: | :--- |
 | **F-01: Autentikasi** | Login ke Sistem CLI | ✓ | ✓ | Sistem merender menu utama sesuai token peran. |
 | **F-02: Transaksi Kasir** | Pencatatan Pesanan/Transaksi Multi-Lini | ✓ | ✓ | Karyawan mengeksekusi transaksi harian. |
-| | Memproses Pembayaran (DP/Lunas) | ✓ | ✓ | Karyawan dapat memproses pembayaran minimal 50% DP atau pelunasan penuh. |
-| | Memproses Pembatalan & Retur | ✓ | ✓ | Karyawan dapat mengeksekusi jika validasi batas waktu lolos. |
+| **F-02: Transaksi Kasir** | Memproses Pembayaran (DP/Lunas) | ✓ | ✓ | Karyawan dapat memproses pembayaran minimal 50% DP atau pelunasan penuh. |
+| **F-02: Transaksi Kasir** | Memproses Pembatalan & Retur | ✓ | ✓ | Karyawan dapat mengeksekusi jika validasi batas waktu lolos. |
 | **F-03: Gudang & BOM** | Mengelola Inventaris Operasional | ✓ | ✓ | Update stok bahan baku dan ATK. |
-| | Mengelola *Bill of Materials* (BOM) | ✓ | ✗ | Pengaturan rumus produk (HPP) hanya dilakukan oleh Pemilik. |
+| **F-03: Gudang & BOM** | Mengelola *Bill of Materials* (BOM) | ✓ | ✗ | Pengaturan rumus produk (HPP) hanya dilakukan oleh Pemilik. |
 | **F-04: Job Tracking** | Memperbarui Status Pesanan | ✓ | ✓ | Karyawan berwenang memperbarui status tahapan produksi (Antri s.d Diambil). |
-| | Mencatat Lokasi Arsip File Desain | ✓ | ✓ | Karyawan mencatat lokasi path file desain sebagai referensi *re-order*. |
+| **F-04: Job Tracking** | Mencatat Lokasi Arsip File Desain | ✓ | ✓ | Karyawan mencatat lokasi path file desain sebagai referensi *re-order*. |
 | **F-05: Waste Management**| Mencatat Limbah Produksi (Cacat/Rusak) | ✓ | ✓ | Diperlukan karyawan untuk jaga keseimbangan stok. |
 | **F-06: SDM & Penggajian**| Pencatatan Kehadiran (Absensi) | ✓ | ✓ | Karyawan diwajibkan mencatat jam masuk dan keluar (*clock in/out*). |
-| | Mengelola Kasbon (Pinjaman Karyawan) | ✓ | ✗ | Persetujuan hutang dipegang Pemilik. |
-| | Komputasi & Penerbitan Gaji (Payroll)| ✓ | ✗ | Perhitungan skema cerdas hanya diproses Pemilik. Karyawan hanya bisa melihat slip miliknya (melalui Read). |
+| **F-06: SDM & Penggajian**| Mengelola Kasbon (Pinjaman Karyawan) | ✓ | ✗ | Persetujuan hutang dipegang Pemilik. |
+| **F-06: SDM & Penggajian**| Komputasi & Penerbitan Gaji (Payroll)| ✓ | ✗ | Perhitungan skema cerdas hanya diproses Pemilik. Karyawan hanya bisa melihat slip miliknya (melalui Read). |
 | **F-07: PPOB & Keuangan** | Eksekusi Transaksi Mutasi/Pulsa/PPOB | ✓ | ✓ | Karyawan mengeksekusi layanan digital dan mendebit akun PPOB. |
-| | Pengecekan Ambang Batas Saldo PPOB | ✓ | ✓ | Muncul sebagai notifikasi otomatis di CLI Kasir. |
+| **F-07: PPOB & Keuangan** | Pengecekan Ambang Batas Saldo PPOB | ✓ | ✓ | Muncul sebagai notifikasi otomatis di CLI Kasir. |
 | **F-08: CRM** | Mengelola Data Pelanggan | ✓ | ✓ | Karyawan butuh untuk transaksi member. |
-| | Mengelola Data Vendor (Supplier) | ✓ | ✗ | Perbandingan harga dan kontrak hanya oleh Pemilik. |
+| **F-08: CRM** | Mengelola Data Vendor (Supplier) | ✓ | ✗ | Perbandingan harga dan kontrak hanya oleh Pemilik. |
 | **F-09: Rekonsiliasi Kas**| Laporan Rekonsiliasi Kas (Fisik Laci) | ✓ | ✗ | Pencocokan data laci mutlak oleh Pemilik. |
-| | Pencetakan Laporan Keuangan/Laba Rugi| ✓ | ✗ | Hak istimewa manajerial. |
-| | Akses Data Finansial Sensitif (Aset) | ✓ | ✗ | Blokir ketat (BR-10) untuk Karyawan. |
+| **F-09: Rekonsiliasi Kas**| Pencetakan Laporan Keuangan/Laba Rugi| ✓ | ✗ | Hak istimewa manajerial. |
+| **F-09: Rekonsiliasi Kas**| Akses Data Finansial Sensitif (Aset) | ✓ | ✗ | Blokir ketat (BR-10) untuk Karyawan. |
 
 ---
 
@@ -182,7 +182,7 @@ Sistem memberlakukan pencatatan paksa *(forced logging)* secara otomatis oleh ap
 
 1.  **Transaksi Keuangan Utama**: Segala *INSERT/UPDATE/DELETE* pada entitas `transactions`, `payments`, `ppob_mutations`, `routine_expenses`, dan `cash_reconciliation`.
 2.  **Jejak Autentikasi**: Percobaan masuk (sukses maupun gagal) dan aktivitas log-out dari entitas `login_sessions`.
-3.  **Integritas Barang**: Manipulasi (pengurangan non-penjualan atau *input* baru) stok *inventory* pada tabel `materials`, `products_services`, dan perubahan via `stock_opname` serta manipulasi status lewat `production_waste`.
+3.  **Integritas Barang & Harga**: Manipulasi (pengurangan non-penjualan atau *input* baru) stok *inventory* pada tabel `materials`, `products_services`, `bom`, `pricing_tiers`, dan perubahan via `stock_opname` serta manipulasi status lewat `production_waste`.
 4.  **Mutasi SDM & Kasbon**: Penambahan dan penyesuaian nominal pinjaman staf (`employee_loans`) serta penerbitan slip akhir `payroll`.
 5.  **Akses Sensitif Manajerial**: Saat Pemilik membaca / mengekstrak tabel Laba Rugi, rincian kewajiban *Loans* Bank berbunga, atau tabungan rahasia *Asset Savings* (Tipe operasi baca ini dicatat untuk rekam forensik akses akun).
 
@@ -194,7 +194,7 @@ Kebijakan implementasi pengamanan tambahan yang wajib dibangun oleh *Software En
 
 1.  **Enkripsi Kredensial**: Tabel `users` pantang menyimpan format teks biasa. Sistem menggunakan algoritma komputasi `bcrypt` (minimum `Rounds = 12`) untuk kolom `password_hash`.
 2.  **Mekanisme Otorisasi API (Jika Terpisah) & CLI**: Validasi berbasis Token *JSON Web Token* (JWT). Token mengusung durasi kadaluarsa (*exp*) maksimum **8 jam**, dan di dalamnya disuntikkan set identitas: `user_id`, `role`, dan batas skop `branch_id`.
-3.  **SQL Role-Based Filtering**: Pengembang diwajibkan menuliskan klausa validasi di level Query basis data. Jika *query* meminta akses tabel `loans` namun objek status memori (`role`) adalah `Karyawan`, maka fungsi akan melempar *(throw)* `UnauthorizedException` dan tidak memproses *database connection*.
+3.  **SQL Role-Based Filtering**: Pengembang diwajibkan menuliskan klausa validasi di level Query basis data. Jika *query* meminta akses tabel `loans` atau `asset_savings` namun objek status memori (`role`) adalah `Karyawan`, maka fungsi akan melempar *(throw)* `UnauthorizedException` dan tidak memproses *database connection*. Selain itu, terapkan query bersyarat `WHERE employee_id = ?` atau `WHERE user_id = ?` untuk tabel dengan akses Terbatas (`users`, `employees`, `employee_loans`, `payroll`, `incentive_points`) agar Karyawan hanya dapat mengakses record miliknya sendiri.
 4.  **CLI Interface Rendering**: Menu-menu manajerial (seperti "Menu Laba Rugi", "Menu Audit") dilarang di-render ke layar monitor apabila pengguna aktif berstatus `Karyawan`.
 5.  **Perlindungan Brute Force & Rate Limiting**: Membutuhkan mekanisme pembatasan percobaan *login* maksimal 5 kali berturut-turut gagal sebelum mengunci akun (*lockout*) selama 15 menit. Pada sistem antarmuka CLI, wajib ada jeda waktu *(delay/latency)* komputasi artifisial minimal 500ms pada setiap respons kegagalan *login*.
 6.  **Invalidasi Sesi (Session Invalidation)**: Sistem wajib menghapus hak token sesi atau memasukkan token ke dalam *blacklist* seketika pengguna melakukan operasi *logout* (menghapus *record* di tabel `login_sessions`), dan mengatur pelepasan sesi otomatis apabila terdeteksi kondisi *idle timeout*.
