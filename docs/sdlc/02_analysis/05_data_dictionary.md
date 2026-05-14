@@ -5,7 +5,7 @@
 | Atribut              | Detail                                                  |
 | -------------------- | ------------------------------------------------------- |
 | **Versi**            | 1.1.0                                                   |
-| **Status**           | [draft]                                                |
+| **Status**           | [finish]                                                |
 | **Tanggal Dibuat**   | 2026-05-14                                              |
 | **Disusun Oleh**     | Senior Data Analyst & Senior Database Architect (AI)    |
 
