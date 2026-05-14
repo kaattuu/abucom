@@ -4,7 +4,7 @@
 
 | Atribut              | Detail                                                  |
 | -------------------- | ------------------------------------------------------- |
-| **Versi**            | 1.0.0                                                   |
+| **Versi**            | 1.1.0                                                   |
 | **Status**           | [draft]                                                |
 | **Tanggal Dibuat**   | 2026-05-14                                              |
 | **Disusun Oleh**     | Senior Data Analyst & Senior Database Architect (AI)    |
@@ -31,7 +31,7 @@ Dokumen Data Dictionary ini berfungsi sebagai acuan utama yang mendefinisikan st
 
 1. **Entitas Master:** `branches`, `users`, `customers`, `pricing_tiers`, `vendors`, `employees`, `products_services`, `materials`, `ppob_accounts`, `assets`
 2. **Entitas Transaksi:** `transactions`, `transaction_items`, `payments`, `orders_job_tracking`, `production_waste`, `ppob_mutations`, `employee_attendance`, `employee_loans`, `payroll`, `cash_reconciliation`, `stock_opname`
-3. **Entitas Pendukung:** `bom`, `incentive_points`, `login_sessions`, `routine_expenses`, `loans`, `audit_trail`
+3. **Entitas Pendukung:** `bom`, `incentive_points`, `login_sessions`, `routine_expenses`, `loans`, `audit_trail, `asset_savings``
 
 ---
 
@@ -44,10 +44,10 @@ Dokumen Data Dictionary ini berfungsi sebagai acuan utama yang mendefinisikan st
 
 | Nama Atribut | Tipe Data | Constraints | Nilai Default | Deskripsi |
 | --- | --- | --- | --- | --- |
-| `id` | `INT` | PK, AUTO_INCREMENT | | ID unik cabang |
-| `branch_name` | `VARCHAR(100)` | NOT NULL | | Nama cabang percetakan |
-| `address` | `TEXT` | NOT NULL | | Alamat lengkap cabang |
-| `phone_number` | `VARCHAR(20)` | | | Nomor telepon kontak cabang |
+| `id` | `INT` | PK, AUTO_INCREMENT | - | ID unik auto-increment sebagai primary key tabel ini |
+| `branch_name` | `VARCHAR(100)` | NOT NULL | - | Nama cabang percetakan |
+| `address` | `TEXT` | NOT NULL | - | Alamat lengkap cabang |
+| `phone_number` | `VARCHAR(20)` | - | - | Nomor telepon kontak cabang |
 | `is_active` | `BOOLEAN` | NOT NULL | `TRUE` | Status operasional cabang (Aktif/Tidak) |
 | `created_at` | `DATETIME` | NOT NULL | `CURRENT_TIMESTAMP` | Waktu pencatatan data cabang |
 
@@ -56,11 +56,11 @@ Dokumen Data Dictionary ini berfungsi sebagai acuan utama yang mendefinisikan st
 
 | Nama Atribut | Tipe Data | Constraints | Nilai Default | Deskripsi |
 | --- | --- | --- | --- | --- |
-| `id` | `INT` | PK, AUTO_INCREMENT | | ID unik pengguna |
-| `branch_id` | `INT` | FK, NOT NULL | | ID cabang tempat pengguna terdaftar |
-| `username` | `VARCHAR(50)` | UNIQUE, NOT NULL | | Username untuk login CLI |
-| `password_hash` | `VARCHAR(255)`| NOT NULL | | Hash password bcrypt |
-| `role` | `ENUM('Pemilik', 'Karyawan')` | NOT NULL | | Hak akses dan peran pengguna |
+| `id` | `INT` | PK, AUTO_INCREMENT | - | ID unik auto-increment sebagai primary key tabel ini |
+| `branch_id` | `INT` | FK, NOT NULL | - | ID cabang tempat pengguna terdaftar |
+| `username` | `VARCHAR(50)` | UNIQUE, NOT NULL | - | Username untuk login CLI |
+| `password_hash` | `VARCHAR(255)` | NOT NULL | - | Hash password bcrypt |
+| `role` | `ENUM('Pemilik', 'Karyawan')` | NOT NULL | - | Hak akses dan peran pengguna |
 | `is_active` | `BOOLEAN` | NOT NULL | `TRUE` | Status keaktifan akun pengguna |
 | `created_at` | `DATETIME` | NOT NULL | `CURRENT_TIMESTAMP` | Waktu akun dibuat |
 | `updated_at` | `DATETIME` | NOT NULL | `CURRENT_TIMESTAMP` | Waktu akun terakhir diperbarui |
@@ -72,12 +72,12 @@ Dokumen Data Dictionary ini berfungsi sebagai acuan utama yang mendefinisikan st
 
 | Nama Atribut | Tipe Data | Constraints | Nilai Default | Deskripsi |
 | --- | --- | --- | --- | --- |
-| `id` | `INT` | PK, AUTO_INCREMENT | | ID unik tingkatan harga |
-| `branch_id` | `INT` | FK, NOT NULL | | ID cabang |
-| `tier_name` | `ENUM('Retail', 'Grosir', 'Mitra')` | UNIQUE, NOT NULL | | Nama tingkatan harga |
+| `id` | `INT` | PK, AUTO_INCREMENT | - | ID unik auto-increment sebagai primary key tabel ini |
+| `branch_id` | `INT` | FK, NOT NULL | - | ID cabang |
+| `tier_name` | `ENUM('Retail', 'Grosir', 'Mitra')` | UNIQUE, NOT NULL | - | Nama tingkatan harga |
 | `min_qty` | `DECIMAL(15,4)` | NOT NULL | `0` | Kuantitas minimal untuk mendapatkan skema harga ini |
-| `min_active_months`| `INT` | NOT NULL | `0` | Syarat durasi aktif pelanggan (bulan) untuk harga Mitra |
-| `description` | `TEXT` | | | Deskripsi syarat dan ketentuan skema harga |
+| `min_active_months` | `INT` | NOT NULL | `0` | Syarat durasi aktif pelanggan (bulan) untuk harga Mitra |
+| `description` | `TEXT` | - | - | Deskripsi syarat dan ketentuan skema harga |
 
 *Catatan Relasi*: `branch_id` mereferensikan `branches(id)`.
 
@@ -86,26 +86,27 @@ Dokumen Data Dictionary ini berfungsi sebagai acuan utama yang mendefinisikan st
 
 | Nama Atribut | Tipe Data | Constraints | Nilai Default | Deskripsi |
 | --- | --- | --- | --- | --- |
-| `id` | `INT` | PK, AUTO_INCREMENT | | ID unik pelanggan |
-| `branch_id` | `INT` | FK, NOT NULL | | ID cabang tempat pelanggan terdaftar |
-| `pricing_tier_id`| `INT` | FK, NOT NULL | | ID referensi skema harga pelanggan |
-| `full_name` | `VARCHAR(150)` | NOT NULL | | Nama lengkap pelanggan |
-| `whatsapp_number`| `VARCHAR(20)` | | | Nomor kontak/WhatsApp pelanggan |
-| `registered_date`| `DATE` | NOT NULL | `CURRENT_DATE` | Tanggal pelanggan pertama kali transaksi |
+| `id` | `INT` | PK, AUTO_INCREMENT | - | ID unik auto-increment sebagai primary key tabel ini |
+| `branch_id` | `INT` | FK, NOT NULL | - | ID cabang tempat pelanggan terdaftar |
+| `pricing_tier_id` | `INT` | FK, NOT NULL | - | ID referensi skema harga pelanggan |
+| `full_name` | `VARCHAR(150)` | NOT NULL | - | Nama lengkap pelanggan |
+| `whatsapp_number` | `VARCHAR(20)` | - | - | Nomor kontak/WhatsApp pelanggan |
+| `registered_date` | `DATE` | NOT NULL | `CURRENT_DATE` | Tanggal pelanggan pertama kali transaksi |
 
 *Catatan Relasi*: `branch_id` mereferensikan `branches(id)`. `pricing_tier_id` mereferensikan `pricing_tiers(id)`.
+*Catatan Implementasi*: Sistem secara otomatis menentukan tier harga pelanggan berdasarkan `min_qty` transaksi saat ini atau status keaktifan di `min_active_months`.
 
 #### 5. `vendors`
 **Deskripsi Entitas**: Data supplier atau vendor yang memasok bahan baku atau layanan.
 
 | Nama Atribut | Tipe Data | Constraints | Nilai Default | Deskripsi |
 | --- | --- | --- | --- | --- |
-| `id` | `INT` | PK, AUTO_INCREMENT | | ID unik vendor |
-| `branch_id` | `INT` | FK, NOT NULL | | ID cabang |
-| `vendor_name` | `VARCHAR(150)` | NOT NULL | | Nama vendor atau supplier |
-| `contact_person` | `VARCHAR(100)` | | | Nama narahubung vendor |
-| `phone_number` | `VARCHAR(20)` | | | Nomor kontak vendor |
-| `address` | `TEXT` | | | Alamat operasional vendor |
+| `id` | `INT` | PK, AUTO_INCREMENT | - | ID unik auto-increment sebagai primary key tabel ini |
+| `branch_id` | `INT` | FK, NOT NULL | - | ID cabang |
+| `vendor_name` | `VARCHAR(150)` | NOT NULL | - | Nama vendor atau supplier |
+| `contact_person` | `VARCHAR(100)` | - | - | Nama narahubung vendor |
+| `phone_number` | `VARCHAR(20)` | - | - | Nomor kontak vendor |
+| `address` | `TEXT` | - | - | Alamat operasional vendor |
 | `is_active` | `BOOLEAN` | NOT NULL | `TRUE` | Status kerjasama vendor |
 
 *Catatan Relasi*: `branch_id` mereferensikan `branches(id)`.
@@ -115,14 +116,14 @@ Dokumen Data Dictionary ini berfungsi sebagai acuan utama yang mendefinisikan st
 
 | Nama Atribut | Tipe Data | Constraints | Nilai Default | Deskripsi |
 | --- | --- | --- | --- | --- |
-| `id` | `INT` | PK, AUTO_INCREMENT | | ID unik karyawan |
-| `branch_id` | `INT` | FK, NOT NULL | | ID cabang penugasan karyawan |
-| `user_id` | `INT` | FK, UNIQUE | | ID akun pengguna login jika diberikan |
-| `full_name` | `VARCHAR(150)` | NOT NULL | | Nama lengkap karyawan |
-| `position` | `VARCHAR(100)` | NOT NULL | | Jabatan struktural karyawan |
-| `salary_schema` | `ENUM('Tetap', 'Persentase')`| NOT NULL | `Persentase` | Skema dasar penentuan gaji karyawan |
+| `id` | `INT` | PK, AUTO_INCREMENT | - | ID unik auto-increment sebagai primary key tabel ini |
+| `branch_id` | `INT` | FK, NOT NULL | - | ID cabang penugasan karyawan |
+| `user_id` | `INT` | FK, UNIQUE | - | ID akun pengguna login jika diberikan |
+| `full_name` | `VARCHAR(150)` | NOT NULL | - | Nama lengkap karyawan |
+| `position` | `VARCHAR(100)` | NOT NULL | - | Jabatan struktural karyawan |
+| `salary_schema` | `ENUM('Tetap', 'Persentase')` | NOT NULL | `Persentase` | Skema dasar penentuan gaji karyawan |
 | `base_salary` | `DECIMAL(15,4)` | NOT NULL | `0` | Nilai dasar gaji bulanan jika skema `Tetap` |
-| `join_date` | `DATE` | NOT NULL | | Tanggal masuk kerja (Mulai karyawan) |
+| `join_date` | `DATE` | NOT NULL | - | Tanggal masuk kerja (Mulai karyawan) |
 
 *Catatan Relasi*: `branch_id` mereferensikan `branches(id)`. `user_id` mereferensikan `users(id)`.
 
@@ -131,13 +132,13 @@ Dokumen Data Dictionary ini berfungsi sebagai acuan utama yang mendefinisikan st
 
 | Nama Atribut | Tipe Data | Constraints | Nilai Default | Deskripsi |
 | --- | --- | --- | --- | --- |
-| `id` | `INT` | PK, AUTO_INCREMENT | | ID unik layanan/produk |
-| `branch_id` | `INT` | FK, NOT NULL | | ID cabang kepemilikan |
-| `service_type` | `ENUM('Percetakan', 'ATK', 'PPOB', 'Jasa Keuangan', 'Jasa Teknis')`| NOT NULL | | Kategori layanan/produk |
-| `name` | `VARCHAR(150)` | NOT NULL | | Nama produk/jasa |
-| `base_price` | `DECIMAL(15,4)` | NOT NULL | | Harga dasar retail produk/jasa |
+| `id` | `INT` | PK, AUTO_INCREMENT | - | ID unik auto-increment sebagai primary key tabel ini |
+| `branch_id` | `INT` | FK, NOT NULL | - | ID cabang kepemilikan |
+| `service_type` | `ENUM('Percetakan', 'ATK', 'PPOB', 'Jasa Keuangan', 'Jasa Teknis')` | NOT NULL | - | Kategori layanan/produk |
+| `name` | `VARCHAR(150)` | NOT NULL | - | Nama produk/jasa |
+| `base_price` | `DECIMAL(15,4)` | NOT NULL | - | Harga dasar retail produk/jasa |
 | `stock_quantity` | `DECIMAL(15,4)` | NOT NULL | `0` | Saldo stok untuk tipe ATK (0 untuk Jasa) |
-| `unit_of_measure`| `VARCHAR(20)` | | | Satuan ukur (pcs, lbr, dll) |
+| `unit_of_measure` | `VARCHAR(20)` | - | - | Satuan ukur (pcs, lbr, dll) |
 | `is_active` | `BOOLEAN` | NOT NULL | `TRUE` | Apakah produk/layanan tersedia |
 
 *Catatan Relasi*: `branch_id` mereferensikan `branches(id)`.
@@ -147,14 +148,14 @@ Dokumen Data Dictionary ini berfungsi sebagai acuan utama yang mendefinisikan st
 
 | Nama Atribut | Tipe Data | Constraints | Nilai Default | Deskripsi |
 | --- | --- | --- | --- | --- |
-| `id` | `INT` | PK, AUTO_INCREMENT | | ID unik bahan baku |
-| `branch_id` | `INT` | FK, NOT NULL | | ID cabang penyimpanan bahan baku |
-| `vendor_id` | `INT` | FK | | ID vendor penyedia bahan ini |
-| `material_name` | `VARCHAR(150)` | NOT NULL | | Nama bahan baku (kertas, tinta, gagang, dll) |
+| `id` | `INT` | PK, AUTO_INCREMENT | - | ID unik auto-increment sebagai primary key tabel ini |
+| `branch_id` | `INT` | FK, NOT NULL | - | ID cabang penyimpanan bahan baku |
+| `vendor_id` | `INT` | FK | - | ID vendor penyedia bahan ini |
+| `material_name` | `VARCHAR(150)` | NOT NULL | - | Nama bahan baku (kertas, tinta, gagang, dll) |
 | `stock_quantity` | `DECIMAL(15,4)` | NOT NULL | `0` | Kuantitas sisa stok secara presisi |
-| `unit_of_measure`| `VARCHAR(20)` | NOT NULL | | Satuan ukur presisi tinggi (rim, cm2, ml, dll) |
+| `unit_of_measure` | `VARCHAR(20)` | NOT NULL | - | Satuan ukur presisi tinggi (rim, cm2, ml, dll) |
 | `cost_per_unit` | `DECIMAL(15,4)` | NOT NULL | `0` | Harga modal per satuan ukur untuk kalkulasi HPP |
-| `min_stock_alert`| `DECIMAL(15,4)` | NOT NULL | `0` | Batas kuantitas pemunculan peringatan stok |
+| `min_stock_alert` | `DECIMAL(15,4)` | NOT NULL | `0` | Batas kuantitas pemunculan peringatan stok |
 
 *Catatan Relasi*: `branch_id` mereferensikan `branches(id)`. `vendor_id` mereferensikan `vendors(id)`.
 
@@ -163,13 +164,13 @@ Dokumen Data Dictionary ini berfungsi sebagai acuan utama yang mendefinisikan st
 
 | Nama Atribut | Tipe Data | Constraints | Nilai Default | Deskripsi |
 | --- | --- | --- | --- | --- |
-| `id` | `INT` | PK, AUTO_INCREMENT | | ID unik akun digital/PPOB |
-| `branch_id` | `INT` | FK, NOT NULL | | ID cabang pengelola |
-| `platform_name` | `ENUM('Mandiri', 'Dana', 'Gopay', 'OVO', 'LinkAja', 'ShopeePay')`| NOT NULL | | Platform yang menaungi akun digital ini |
-| `account_number` | `VARCHAR(50)` | NOT NULL | | Nomor identitas / rekening / ponsel akun |
-| `current_balance`| `DECIMAL(15,4)` | NOT NULL | `0` | Saldo aktual di dalam akun |
+| `id` | `INT` | PK, AUTO_INCREMENT | - | ID unik auto-increment sebagai primary key tabel ini |
+| `branch_id` | `INT` | FK, NOT NULL | - | ID cabang pengelola |
+| `platform_name` | `ENUM('Mandiri', 'Dana', 'Gopay', 'OVO', 'LinkAja', 'ShopeePay')` | NOT NULL | - | Platform yang menaungi akun digital ini |
+| `account_number` | `VARCHAR(50)` | NOT NULL | - | Nomor identitas / rekening / ponsel akun |
+| `current_balance` | `DECIMAL(15,4)` | NOT NULL | `0` | Saldo aktual di dalam akun |
 | `min_balance` | `DECIMAL(15,4)` | NOT NULL | `150000` | Batas saldo minimum (aturan Rp 150.000) |
-| `deposit_recommend`| `DECIMAL(15,4)`| NOT NULL | `500000` | Nilai anjuran deposit saat saldo mencapai limit |
+| `deposit_recommend` | `DECIMAL(15,4)` | NOT NULL | `500000` | Nilai anjuran deposit saat saldo mencapai limit |
 
 *Catatan Relasi*: `branch_id` mereferensikan `branches(id)`.
 
@@ -178,12 +179,12 @@ Dokumen Data Dictionary ini berfungsi sebagai acuan utama yang mendefinisikan st
 
 | Nama Atribut | Tipe Data | Constraints | Nilai Default | Deskripsi |
 | --- | --- | --- | --- | --- |
-| `id` | `INT` | PK, AUTO_INCREMENT | | ID unik aset |
-| `branch_id` | `INT` | FK, NOT NULL | | ID cabang penempatan aset |
-| `asset_name` | `VARCHAR(150)` | NOT NULL | | Nama barang / mesin aset |
-| `purchase_date` | `DATE` | NOT NULL | | Tanggal aset dibeli |
+| `id` | `INT` | PK, AUTO_INCREMENT | - | ID unik auto-increment sebagai primary key tabel ini |
+| `branch_id` | `INT` | FK, NOT NULL | - | ID cabang penempatan aset |
+| `asset_name` | `VARCHAR(150)` | NOT NULL | - | Nama barang / mesin aset |
+| `purchase_date` | `DATE` | NOT NULL | - | Tanggal aset dibeli |
 | `purchase_price` | `DECIMAL(15,4)` | NOT NULL | `0` | Harga perolehan aset |
-| `condition_status`| `VARCHAR(50)` | | | Status mesin (Normal, Rusak, Perbaikan) |
+| `condition_status` | `ENUM('Normal', 'Rusak', 'Perbaikan')` | - | `Normal` | Status mesin (Normal, Rusak, Perbaikan) |
 
 *Catatan Relasi*: `branch_id` mereferensikan `branches(id)`.
 
@@ -196,14 +197,14 @@ Dokumen Data Dictionary ini berfungsi sebagai acuan utama yang mendefinisikan st
 
 | Nama Atribut | Tipe Data | Constraints | Nilai Default | Deskripsi |
 | --- | --- | --- | --- | --- |
-| `id` | `INT` | PK, AUTO_INCREMENT | | ID unik transaksi induk |
-| `branch_id` | `INT` | FK, NOT NULL | | ID cabang pelaksanaan transaksi |
-| `user_id` | `INT` | FK, NOT NULL | | ID pengguna kasir yang bertugas |
-| `customer_id` | `INT` | FK, NOT NULL | | ID pelanggan yang melakukan transaksi |
-| `transaction_date`| `DATETIME` | NOT NULL | `CURRENT_TIMESTAMP` | Waktu transaksi di-*input* |
+| `id` | `INT` | PK, AUTO_INCREMENT | - | ID unik auto-increment sebagai primary key tabel ini |
+| `branch_id` | `INT` | FK, NOT NULL | - | ID cabang pelaksanaan transaksi |
+| `user_id` | `INT` | FK, NOT NULL | - | ID pengguna kasir yang bertugas |
+| `customer_id` | `INT` | FK, NOT NULL | - | ID pelanggan yang melakukan transaksi |
+| `transaction_date` | `DATETIME` | NOT NULL | `CURRENT_TIMESTAMP` | Waktu transaksi di-*input* |
 | `total_amount` | `DECIMAL(15,4)` | NOT NULL | `0` | Total tagihan nilai transaksi (setelah harga khusus) |
 | `total_hpp` | `DECIMAL(15,4)` | NOT NULL | `0` | Total HPP (Cost of Goods Sold) transaksi ini |
-| `payment_status` | `ENUM('Belum Bayar', 'DP', 'Lunas')` | NOT NULL | `Belum Bayar` | Status penyelesaian pembayaran transaksi |
+| `payment_status` | `ENUM('Belum Bayar', 'DP', 'Lunas', 'Refund', 'Dibatalkan')` | NOT NULL | `Belum Bayar` | Status penyelesaian pembayaran transaksi |
 
 *Catatan Relasi*: `branch_id` mereferensikan `branches(id)`, `user_id` ke `users(id)`, `customer_id` ke `customers(id)`.
 
@@ -212,9 +213,9 @@ Dokumen Data Dictionary ini berfungsi sebagai acuan utama yang mendefinisikan st
 
 | Nama Atribut | Tipe Data | Constraints | Nilai Default | Deskripsi |
 | --- | --- | --- | --- | --- |
-| `id` | `INT` | PK, AUTO_INCREMENT | | ID unik baris rincian keranjang |
-| `transaction_id` | `INT` | FK, NOT NULL | | ID induk dari tabel `transactions` |
-| `product_id` | `INT` | FK, NOT NULL | | ID produk/layanan yang dibeli |
+| `id` | `INT` | PK, AUTO_INCREMENT | - | ID unik auto-increment sebagai primary key tabel ini |
+| `transaction_id` | `INT` | FK, NOT NULL | - | ID induk dari tabel `transactions` |
+| `product_id` | `INT` | FK, NOT NULL | - | ID produk/layanan yang dibeli |
 | `quantity` | `DECIMAL(15,4)` | NOT NULL | `1` | Kuantitas (mendukung desimal jika berupa ukuran) |
 | `unit_price` | `DECIMAL(15,4)` | NOT NULL | `0` | Harga jual per kuantitas (disesuaikan dengan tier) |
 | `subtotal` | `DECIMAL(15,4)` | NOT NULL | `0` | Total tagihan baris ini |
@@ -227,11 +228,11 @@ Dokumen Data Dictionary ini berfungsi sebagai acuan utama yang mendefinisikan st
 
 | Nama Atribut | Tipe Data | Constraints | Nilai Default | Deskripsi |
 | --- | --- | --- | --- | --- |
-| `id` | `INT` | PK, AUTO_INCREMENT | | ID unik log pembayaran |
-| `transaction_id` | `INT` | FK, NOT NULL | | ID transaksi yang dilunasi/di-DP |
+| `id` | `INT` | PK, AUTO_INCREMENT | - | ID unik auto-increment sebagai primary key tabel ini |
+| `transaction_id` | `INT` | FK, NOT NULL | - | ID transaksi yang dilunasi/di-DP |
 | `payment_date` | `DATETIME` | NOT NULL | `CURRENT_TIMESTAMP` | Waktu uang diterima |
 | `amount_paid` | `DECIMAL(15,4)` | NOT NULL | `0` | Besaran uang nominal pembayaran |
-| `payment_type` | `ENUM('DP', 'Lunas')` | NOT NULL | | Status termin pembayaran yang diinput |
+| `payment_type` | `ENUM('DP', 'Lunas', 'Refund')` | NOT NULL | - | Status termin pembayaran yang diinput |
 
 *Catatan Relasi*: `transaction_id` mereferensikan `transactions(id)`.
 
@@ -240,10 +241,10 @@ Dokumen Data Dictionary ini berfungsi sebagai acuan utama yang mendefinisikan st
 
 | Nama Atribut | Tipe Data | Constraints | Nilai Default | Deskripsi |
 | --- | --- | --- | --- | --- |
-| `id` | `INT` | PK, AUTO_INCREMENT | | ID pelacakan (tracking pesanan) |
-| `transaction_id` | `INT` | FK, UNIQUE, NOT NULL| | ID transaksi induk yang terhubung ke job ini |
+| `id` | `INT` | PK, AUTO_INCREMENT | - | ID unik auto-increment sebagai primary key tabel ini |
+| `transaction_id` | `INT` | FK, UNIQUE, NOT NULL | - | ID transaksi induk yang terhubung ke job ini |
 | `status` | `ENUM('Antri', 'Proses Desain', 'Produksi', 'Selesai', 'Diambil', 'Dibatalkan')` | NOT NULL | `Antri` | Status posisi pesanan percetakan di operasional |
-| `design_file_path`| `VARCHAR(255)`| | | Path/URL direktori fisik/logis menyimpan file desain |
+| `design_file_path` | `VARCHAR(255)` | - | - | Path/URL direktori fisik/logis menyimpan file desain |
 | `updated_at` | `DATETIME` | NOT NULL | `CURRENT_TIMESTAMP` | Kapan status ini diperbarui terakhir kali |
 
 *Catatan Relasi*: `transaction_id` mereferensikan `transactions(id)`.
@@ -253,11 +254,11 @@ Dokumen Data Dictionary ini berfungsi sebagai acuan utama yang mendefinisikan st
 
 | Nama Atribut | Tipe Data | Constraints | Nilai Default | Deskripsi |
 | --- | --- | --- | --- | --- |
-| `id` | `INT` | PK, AUTO_INCREMENT | | ID limbah tercatat |
-| `branch_id` | `INT` | FK, NOT NULL | | ID cabang |
-| `material_id` | `INT` | FK, NOT NULL | | ID bahan baku / material referensi |
+| `id` | `INT` | PK, AUTO_INCREMENT | - | ID unik auto-increment sebagai primary key tabel ini |
+| `branch_id` | `INT` | FK, NOT NULL | - | ID cabang |
+| `material_id` | `INT` | FK, NOT NULL | - | ID bahan baku / material referensi |
 | `waste_quantity` | `DECIMAL(15,4)` | NOT NULL | `0` | Kuantitas bahan terbuang/rusak dalam presisi desimal |
-| `waste_reason` | `TEXT` | NOT NULL | | Deskripsi penyebab kerusakan (salah desain, salah ukuran, dll) |
+| `waste_reason` | `TEXT` | NOT NULL | - | Deskripsi penyebab kerusakan (salah desain, salah ukuran, dll) |
 | `recorded_at` | `DATETIME` | NOT NULL | `CURRENT_TIMESTAMP` | Waktu kerusakan tercatat |
 
 *Catatan Relasi*: `branch_id` mereferensikan `branches(id)`. `material_id` mereferensikan `materials(id)`.
@@ -267,68 +268,72 @@ Dokumen Data Dictionary ini berfungsi sebagai acuan utama yang mendefinisikan st
 
 | Nama Atribut | Tipe Data | Constraints | Nilai Default | Deskripsi |
 | --- | --- | --- | --- | --- |
-| `id` | `INT` | PK, AUTO_INCREMENT | | ID log mutasi keuangan |
-| `ppob_account_id`| `INT` | FK, NOT NULL | | ID akun PPOB bersangkutan |
-| `transaction_id` | `INT` | FK | | ID referensi ke modul transaksi (opsional jika mutasi mandiri) |
-| `mutation_type` | `ENUM('Kredit', 'Debit')` | NOT NULL | | Penambahan (Kredit) atau pengurangan (Debit) |
+| `id` | `INT` | PK, AUTO_INCREMENT | - | ID unik auto-increment sebagai primary key tabel ini |
+| `ppob_account_id` | `INT` | FK, NOT NULL | - | ID akun PPOB bersangkutan |
+| `transaction_id` | `INT` | FK | - | ID referensi ke modul transaksi (opsional jika mutasi mandiri) |
+| `mutation_type` | `ENUM('Kredit', 'Debit')` | NOT NULL | - | Penambahan (Kredit) atau pengurangan (Debit) |
 | `amount` | `DECIMAL(15,4)` | NOT NULL | `0` | Nilai mutasi pergerakan kas |
 | `mutation_date` | `DATETIME` | NOT NULL | `CURRENT_TIMESTAMP` | Waktu mutasi terjadi |
-| `description` | `TEXT` | | | Catatan peruntukan mutasi (transfer ke A, dsb) |
+| `description` | `TEXT` | - | - | Catatan peruntukan mutasi (transfer ke A, dsb) |
 
 *Catatan Relasi*: `ppob_account_id` mereferensikan `ppob_accounts(id)`. `transaction_id` mereferensikan `transactions(id)`.
+*Catatan Implementasi*: Sistem akan memunculkan peringatan jika `current_balance` turun di bawah `min_balance`.
 
 #### 17. `employee_attendance`
 **Deskripsi Entitas**: Riwayat kehadiran karyawan per hari.
 
 | Nama Atribut | Tipe Data | Constraints | Nilai Default | Deskripsi |
 | --- | --- | --- | --- | --- |
-| `id` | `INT` | PK, AUTO_INCREMENT | | ID unik absensi |
-| `employee_id` | `INT` | FK, NOT NULL | | ID karyawan terkait |
+| `id` | `INT` | PK, AUTO_INCREMENT | - | ID unik auto-increment sebagai primary key tabel ini |
+| `employee_id` | `INT` | FK, NOT NULL | - | ID karyawan terkait |
 | `check_in_time` | `DATETIME` | NOT NULL | `CURRENT_TIMESTAMP` | Jam kedatangan |
-| `check_out_time` | `DATETIME` | | | Jam kepulangan |
+| `check_out_time` | `DATETIME` | - | - | Jam kepulangan |
 | `work_date` | `DATE` | NOT NULL | `CURRENT_DATE` | Tanggal hari kerja terkait absensi ini |
 
 *Catatan Relasi*: `employee_id` mereferensikan `employees(id)`.
+*Catatan Implementasi*: Skema gaji persentase menggunakan bagi hasil 15% dari pendapatan bersih jika target bulanan tidak tercapai, sesuai BR-03.
 
 #### 18. `employee_loans`
 **Deskripsi Entitas**: Data hutang/kasbon internal karyawan ke perusahaan.
 
 | Nama Atribut | Tipe Data | Constraints | Nilai Default | Deskripsi |
 | --- | --- | --- | --- | --- |
-| `id` | `INT` | PK, AUTO_INCREMENT | | ID data kasbon |
-| `employee_id` | `INT` | FK, NOT NULL | | ID peminjam / karyawan terkait |
+| `id` | `INT` | PK, AUTO_INCREMENT | - | ID unik auto-increment sebagai primary key tabel ini |
+| `employee_id` | `INT` | FK, NOT NULL | - | ID peminjam / karyawan terkait |
 | `loan_amount` | `DECIMAL(15,4)` | NOT NULL | `0` | Nominal uang dihutang (kasbon) |
-| `remaining_amount`| `DECIMAL(15,4)` | NOT NULL | `0` | Sisa nominal kasbon yang belum dipotong gaji |
+| `remaining_amount` | `DECIMAL(15,4)` | NOT NULL | `0` | Sisa nominal kasbon yang belum dipotong gaji |
 | `loan_date` | `DATE` | NOT NULL | `CURRENT_DATE` | Tanggal pengambilan pinjaman |
 
 *Catatan Relasi*: `employee_id` mereferensikan `employees(id)`.
+*Catatan Implementasi*: Skema gaji persentase menggunakan bagi hasil 15% dari pendapatan bersih jika target bulanan tidak tercapai, sesuai BR-03.
 
 #### 19. `payroll`
 **Deskripsi Entitas**: Penerbitan rekapitulasi gaji karyawan (Slip Gaji Digital).
 
 | Nama Atribut | Tipe Data | Constraints | Nilai Default | Deskripsi |
 | --- | --- | --- | --- | --- |
-| `id` | `INT` | PK, AUTO_INCREMENT | | ID unik payroll |
-| `employee_id` | `INT` | FK, NOT NULL | | ID karyawan penerima gaji |
-| `period_month` | `VARCHAR(7)` | NOT NULL | | Periode gaji, contoh format 'YYYY-MM' |
+| `id` | `INT` | PK, AUTO_INCREMENT | - | ID unik auto-increment sebagai primary key tabel ini |
+| `employee_id` | `INT` | FK, NOT NULL | - | ID karyawan penerima gaji |
+| `period_month` | `VARCHAR(7)` | NOT NULL | - | Periode gaji, contoh format 'YYYY-MM' |
 | `base_payment` | `DECIMAL(15,4)` | NOT NULL | `0` | Gaji dasar / gaji komisi persentase pendapatan perusahaan |
-| `incentive_bonus`| `DECIMAL(15,4)` | NOT NULL | `0` | Total uang ekuivalen dari poin insentif bulanan |
+| `incentive_bonus` | `DECIMAL(15,4)` | NOT NULL | `0` | Total uang ekuivalen dari poin insentif bulanan |
 | `loan_deduction` | `DECIMAL(15,4)` | NOT NULL | `0` | Total potongan kasbon hutang aktif karyawan pada bulan tsb |
 | `net_salary` | `DECIMAL(15,4)` | NOT NULL | `0` | Uang bersih yang diserahkan/dibayarkan |
 | `processed_at` | `DATETIME` | NOT NULL | `CURRENT_TIMESTAMP` | Tanggal waktu validasi dan penerbitan slip |
 
 *Catatan Relasi*: `employee_id` mereferensikan `employees(id)`.
+*Catatan Implementasi*: Skema gaji persentase menggunakan bagi hasil 15% dari pendapatan bersih jika target bulanan tidak tercapai, sesuai BR-03.
 
 #### 20. `cash_reconciliation`
 **Deskripsi Entitas**: Hasil laporan validasi jumlah fisik laci dibandingkan riwayat transaksi.
 
 | Nama Atribut | Tipe Data | Constraints | Nilai Default | Deskripsi |
 | --- | --- | --- | --- | --- |
-| `id` | `INT` | PK, AUTO_INCREMENT | | ID riwayat rekonsiliasi kas |
-| `branch_id` | `INT` | FK, NOT NULL | | ID unit cabang pelaksana rekonsiliasi |
-| `user_id` | `INT` | FK, NOT NULL | | Karyawan/User yang melaporkan |
+| `id` | `INT` | PK, AUTO_INCREMENT | - | ID unik auto-increment sebagai primary key tabel ini |
+| `branch_id` | `INT` | FK, NOT NULL | - | ID unit cabang pelaksana rekonsiliasi |
+| `user_id` | `INT` | FK, NOT NULL | - | Karyawan/User yang melaporkan |
 | `system_balance` | `DECIMAL(15,4)` | NOT NULL | `0` | Kalkulasi saldo laci berdasarkan rekam transaksi database |
-| `physical_balance`| `DECIMAL(15,4)` | NOT NULL | `0` | Kalkulasi lembaran uang tunai aktual laci fisik kasir |
+| `physical_balance` | `DECIMAL(15,4)` | NOT NULL | `0` | Kalkulasi lembaran uang tunai aktual laci fisik kasir |
 | `difference` | `DECIMAL(15,4)` | NOT NULL | `0` | Nilai selisih (`physical` - `system`) |
 | `reconciled_at` | `DATETIME` | NOT NULL | `CURRENT_TIMESTAMP` | Tanggal dan jam eksekusi penutupan shift/rekonsiliasi |
 
@@ -339,9 +344,9 @@ Dokumen Data Dictionary ini berfungsi sebagai acuan utama yang mendefinisikan st
 
 | Nama Atribut | Tipe Data | Constraints | Nilai Default | Deskripsi |
 | --- | --- | --- | --- | --- |
-| `id` | `INT` | PK, AUTO_INCREMENT | | ID penyesuaian data stock |
-| `branch_id` | `INT` | FK, NOT NULL | | ID cabang pelaksana opname |
-| `material_id` | `INT` | FK, NOT NULL | | ID bahan baku/barang di audit |
+| `id` | `INT` | PK, AUTO_INCREMENT | - | ID unik auto-increment sebagai primary key tabel ini |
+| `branch_id` | `INT` | FK, NOT NULL | - | ID cabang pelaksana opname |
+| `material_id` | `INT` | FK, NOT NULL | - | ID bahan baku/barang di audit |
 | `system_qty` | `DECIMAL(15,4)` | NOT NULL | `0` | Catatan persediaan material di sistem |
 | `actual_qty` | `DECIMAL(15,4)` | NOT NULL | `0` | Angka persediaan material temuan nyata |
 | `difference_qty` | `DECIMAL(15,4)` | NOT NULL | `0` | Ketidaksesuaian/Selisih presisi tinggi |
@@ -358,36 +363,41 @@ Dokumen Data Dictionary ini berfungsi sebagai acuan utama yang mendefinisikan st
 
 | Nama Atribut | Tipe Data | Constraints | Nilai Default | Deskripsi |
 | --- | --- | --- | --- | --- |
-| `id` | `INT` | PK, AUTO_INCREMENT | | ID komposisi material |
-| `product_id` | `INT` | FK, NOT NULL | | ID produk utama/hasil cetakan |
-| `material_id` | `INT` | FK, NOT NULL | | ID referensi bahan penyusun / material dasar |
+| `id` | `INT` | PK, AUTO_INCREMENT | - | ID unik auto-increment sebagai primary key tabel ini |
+| `product_id` | `INT` | FK, NOT NULL | - | ID produk utama/hasil cetakan |
+| `material_id` | `INT` | FK, NOT NULL | - | ID referensi bahan penyusun / material dasar |
 | `required_qty` | `DECIMAL(15,4)` | NOT NULL | `0` | Jumlah nilai presisi yang ditarik dari material stok per-1 satuan cetak produk |
 
 *Catatan Relasi*: `product_id` mereferensikan `products_services(id)`. `material_id` mereferensikan `materials(id)`.
+
+*Catatan Implementasi*: HPP dikalkulasi dengan menjumlahkan `required_qty` dikali `cost_per_unit` dari tabel `materials` yang terkait.
 
 #### 23. `incentive_points`
 **Deskripsi Entitas**: Catatan koleksi dan log akumulasi poin bonus kerja karyawan atas pekerjaan/job.
 
 | Nama Atribut | Tipe Data | Constraints | Nilai Default | Deskripsi |
 | --- | --- | --- | --- | --- |
-| `id` | `INT` | PK, AUTO_INCREMENT | | ID bonus/riwayat insentif |
-| `employee_id` | `INT` | FK, NOT NULL | | ID penerima komisi poin |
-| `transaction_id` | `INT` | FK | | ID transaksinya sebagai pelacakan referensi asal muasal poin |
-| `point_category` | `ENUM('Rutin', 'Dasar', 'Kustom', 'Teknis Berat')` | NOT NULL | | Tingkat kesulitan/bobot poin transaksi |
+| `id` | `INT` | PK, AUTO_INCREMENT | - | ID unik auto-increment sebagai primary key tabel ini |
+| `employee_id` | `INT` | FK, NOT NULL | - | ID penerima komisi poin |
+| `transaction_id` | `INT` | FK | - | ID transaksinya sebagai pelacakan referensi asal muasal poin |
+| `point_category` | `ENUM('Rutin', 'Dasar', 'Kustom', 'Teknis Berat')` | NOT NULL | - | Tingkat kesulitan/bobot poin transaksi |
 | `earned_points` | `INT` | NOT NULL | `0` | Besar poin utuh yang didapatkan (misal: 1, 3, 5, atau 10) |
 | `earned_date` | `DATETIME` | NOT NULL | `CURRENT_TIMESTAMP` | Kapan pekerjaan ini diselesaikan |
 
 *Catatan Relasi*: `employee_id` mereferensikan `employees(id)`. `transaction_id` mereferensikan `transactions(id)`.
+
+*Catatan Implementasi*: Poin dikonversi ke nominal uang (misal 1 Poin = Rp 500) pada saat rekapitulasi `payroll` di akhir bulan.
+*Catatan Implementasi*: Skema gaji persentase menggunakan bagi hasil 15% dari pendapatan bersih jika target bulanan tidak tercapai, sesuai BR-03.
 
 #### 24. `login_sessions`
 **Deskripsi Entitas**: Data persisten untuk token sesi pengguna aktif.
 
 | Nama Atribut | Tipe Data | Constraints | Nilai Default | Deskripsi |
 | --- | --- | --- | --- | --- |
-| `id` | `INT` | PK, AUTO_INCREMENT | | ID aktivitas token/Sesi |
-| `user_id` | `INT` | FK, NOT NULL | | ID pemegang hak sesi login |
-| `jwt_token` | `VARCHAR(512)`| UNIQUE, NOT NULL | | String panjang token penanda keaktifan validitas akses |
-| `expires_at` | `DATETIME` | NOT NULL | | Ambang batas kadaluarsa token/sesi 8 jam |
+| `id` | `INT` | PK, AUTO_INCREMENT | - | ID unik auto-increment sebagai primary key tabel ini |
+| `user_id` | `INT` | FK, NOT NULL | - | ID pemegang hak sesi login |
+| `jwt_token` | `VARCHAR(512)` | UNIQUE, NOT NULL | - | String panjang token penanda keaktifan validitas akses |
+| `expires_at` | `DATETIME` | NOT NULL | - | Ambang batas kadaluarsa token/sesi 8 jam |
 
 *Catatan Relasi*: `user_id` mereferensikan `users(id)`.
 
@@ -396,9 +406,9 @@ Dokumen Data Dictionary ini berfungsi sebagai acuan utama yang mendefinisikan st
 
 | Nama Atribut | Tipe Data | Constraints | Nilai Default | Deskripsi |
 | --- | --- | --- | --- | --- |
-| `id` | `INT` | PK, AUTO_INCREMENT | | ID beban pengeluaran umum |
-| `branch_id` | `INT` | FK, NOT NULL | | ID cabang |
-| `expense_name` | `VARCHAR(150)` | NOT NULL | | Kategori nama keperluan anggaran biaya operasional (listrik, wifi, dll) |
+| `id` | `INT` | PK, AUTO_INCREMENT | - | ID unik auto-increment sebagai primary key tabel ini |
+| `branch_id` | `INT` | FK, NOT NULL | - | ID cabang |
+| `expense_name` | `VARCHAR(150)` | NOT NULL | - | Kategori nama keperluan anggaran biaya operasional (listrik, wifi, dll) |
 | `amount` | `DECIMAL(15,4)` | NOT NULL | `0` | Besaran nominal angka dicairkan |
 | `expense_date` | `DATE` | NOT NULL | `CURRENT_DATE` | Tanggal realisasi kebutuhan |
 
@@ -409,11 +419,11 @@ Dokumen Data Dictionary ini berfungsi sebagai acuan utama yang mendefinisikan st
 
 | Nama Atribut | Tipe Data | Constraints | Nilai Default | Deskripsi |
 | --- | --- | --- | --- | --- |
-| `id` | `INT` | PK, AUTO_INCREMENT | | ID daftar tanggungan hutang/modal |
-| `branch_id` | `INT` | FK, NOT NULL | | ID cabang bisnis bersangkutan |
-| `loan_source` | `VARCHAR(150)` | NOT NULL | | Pihak yang mengutangi (Teman/Orang Tua/Bank BRI/Bank Mandiri) |
-| `loan_type` | `ENUM('Tanpa Bunga', 'Berbunga')`| NOT NULL | | Sifat kewajiban utang piutang modal |
-| `principal_amount`| `DECIMAL(15,4)` | NOT NULL | `0` | Besar nominal modal diinjeksi atau nilai total kredit |
+| `id` | `INT` | PK, AUTO_INCREMENT | - | ID unik auto-increment sebagai primary key tabel ini |
+| `branch_id` | `INT` | FK, NOT NULL | - | ID cabang bisnis bersangkutan |
+| `loan_source` | `VARCHAR(150)` | NOT NULL | - | Pihak yang mengutangi (Teman/Orang Tua/Bank BRI/Bank Mandiri) |
+| `loan_type` | `ENUM('Tanpa Bunga', 'Berbunga')` | NOT NULL | - | Sifat kewajiban utang piutang modal |
+| `principal_amount` | `DECIMAL(15,4)` | NOT NULL | `0` | Besar nominal modal diinjeksi atau nilai total kredit |
 | `remaining_debt` | `DECIMAL(15,4)` | NOT NULL | `0` | Nominal tagihan atau sisa pengembalian hutang usaha kepada investor/kreditur |
 
 *Catatan Relasi*: `branch_id` mereferensikan `branches(id)`.
@@ -423,16 +433,31 @@ Dokumen Data Dictionary ini berfungsi sebagai acuan utama yang mendefinisikan st
 
 | Nama Atribut | Tipe Data | Constraints | Nilai Default | Deskripsi |
 | --- | --- | --- | --- | --- |
-| `id` | `INT` | PK, AUTO_INCREMENT | | ID pencatatan log |
-| `user_id` | `INT` | FK, NOT NULL | | Identitas subyek/pelaku yang memicu perubahan |
-| `action_type` | `VARCHAR(50)` | NOT NULL | | Sifat/kategori modifikasi aksi di sistem (INSERT, UPDATE, DELETE, LOGIN) |
-| `target_entity` | `VARCHAR(50)` | NOT NULL | | Objek tabel yang terkena dampaknya (misal 'materials', 'transactions') |
-| `change_detail` | `TEXT` | NOT NULL | | Narasi rincian komprehensif atas kejadian mutasi nilai spesifik (data sebelum/sesudah dirubah) |
+| `id` | `INT` | PK, AUTO_INCREMENT | - | ID unik auto-increment sebagai primary key tabel ini |
+| `user_id` | `INT` | FK, NOT NULL | - | Identitas subyek/pelaku yang memicu perubahan |
+| `action_type` | `ENUM('INSERT', 'UPDATE', 'DELETE', 'LOGIN', 'LOGOUT')` | NOT NULL | - | Sifat/kategori modifikasi aksi di sistem (INSERT, UPDATE, DELETE, LOGIN) |
+| `target_entity` | `VARCHAR(50)` | NOT NULL | - | Objek tabel yang terkena dampaknya (misal 'materials', 'transactions') |
+| `change_detail` | `TEXT` | NOT NULL | - | Narasi rincian komprehensif atas kejadian mutasi nilai spesifik (data sebelum/sesudah dirubah) |
 | `timestamp` | `DATETIME` | NOT NULL | `CURRENT_TIMESTAMP` | Jejak rekam waktu peristiwa manipulasi terjadi |
 
 *Catatan Relasi*: `user_id` mereferensikan `users(id)`.
 
 ---
+
+
+#### 28. `asset_savings`
+**Deskripsi Entitas**: Tabungan kas khusus pengadaan alat baru pemilik (diakses khusus role Pemilik).
+
+| Nama Atribut | Tipe Data | Constraints | Nilai Default | Deskripsi |
+| --- | --- | --- | --- | --- |
+| `id` | `INT` | PK, AUTO_INCREMENT | - | ID unik auto-increment sebagai primary key tabel ini |
+| `branch_id` | `INT` | FK, NOT NULL | - | ID referensi cabang |
+| `account_name` | `VARCHAR(150)` | NOT NULL | - | Nama rekening / tempat tabungan |
+| `balance` | `DECIMAL(15,4)` | NOT NULL | `0` | Saldo aktual tabungan aset |
+| `last_updated` | `DATETIME` | NOT NULL | `CURRENT_TIMESTAMP` | Jejak rekam waktu peristiwa penambahan/penarikan |
+
+*Catatan Relasi*: `branch_id` mereferensikan `branches(id)`.
+*Catatan Implementasi*: Sesuai BR-10, data dari tabel ini secara eksplisit disembunyikan dari akses `role` Karyawan.
 
 ## 5. Ringkasan Relasi Antar Entitas (ERD Prep)
 
@@ -478,6 +503,7 @@ Tabel berikut menyajikan ringkasan seluruh dependensi/kardinalitas yang menghubu
 | `routine_expenses` | `branch_id` | `branches` | Many-to-One |
 | `loans` | `branch_id` | `branches` | Many-to-One |
 | `audit_trail` | `user_id` | `users` | Many-to-One |
+| `asset_savings` | `branch_id` | `branches` | Many-to-One |
 
 ---
 
