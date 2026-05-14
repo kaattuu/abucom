@@ -23,7 +23,6 @@ credentials.json
 
 
 *.log
-*.sql
 *.sqlite
 
 .DS_Store
