@@ -3,10 +3,12 @@
 ' METADATA DIAGRAM
 ' ============================================
 ' Judul: Workflow Diagram - Sistem Manajemen Usaha Percetakan AbuCom
-' Versi: 1.0.0
-' Status: [draft]
+' Versi: 1.1.0
+' Status: [finish]
 ' Tanggal Dibuat: 2026-05-13
+' Tanggal Direvisi: 2026-05-14
 ' Disusun Oleh: Senior Business Process Analyst & Senior System Analyst (AI)
+' Catatan Revisi: v1.1.0 - Validasi diagram sesuai BRD dan SRS: pengecekan decision points, perbaikan alur Jasa Teknis, penambahan mapping tabel, dan update metadata.
 ' ============================================
 
 skinparam defaultTextAlignment center
@@ -95,7 +97,7 @@ partition "1. Alur Transaksi Utama (Kasir & Job Tracking)" {
         |Sistem|
         :Mencatat Transaksi (Status Pembayaran: Lunas);
         
-        if (Layanan PPOB / Jasa Keuangan?) then (Ya)
+        if (Kategori Layanan?) then (PPOB / Jasa Keuangan)
             :Mengurangi saldo akun digital / PPOB;
             if (Sisa saldo < Rp 150.000?) then (Ya)
                 :Menampilkan peringatan (Warning) batas saldo minimum;
@@ -103,10 +105,13 @@ partition "1. Alur Transaksi Utama (Kasir & Job Tracking)" {
                 :Melakukan deposit minimal Rp 500.000\n[Dilakukan di luar alur sistem CLI];
             else (Tidak)
             endif
-        else (ATK)
+        elseif (Kategori Layanan?) then (ATK)
             |Sistem|
             :Menghitung HPP;
             :Mengurangi stok barang retail;
+        else (Jasa Teknis)
+            |Sistem|
+            :Mencatat pendapatan jasa teknis;
         endif
         
         |Sistem|
@@ -162,11 +167,28 @@ partition "2. Alur Pembatalan Pesanan & Retur Barang" {
     stop
 }
 
+' ============================================
+' TABEL MAPPING WORKFLOW PROCESS vs SYSTEM COMPONENT
+' ============================================
+' | Workflow Process                    | System Component (Modul SRS)  | Keterangan |
+' |-------------------------------------|-------------------------------|------------|
+' | Menerima pesanan & Input CLI        | F-02: Transaksi Kasir         | Input data pelanggan & item |
+' | Menerapkan Harga Grosir / Mitra     | F-02: Transaksi Kasir         | Logic penentuan harga |
+' | Pembayaran (DP/Lunas)               | F-02: Transaksi Kasir         | Status pembayaran |
+' | Menghitung HPP berdasarkan BOM      | F-03: Gudang & BOM            | Mengurangi stok bahan presisi |
+' | Update status pesanan               | F-04: Job Tracking            | Antri -> Desain -> Produksi -> Selesai |
+' | Mencatat limbah produksi (Waste)    | F-05: Waste Management        | Mengurangi stok bahan rusak |
+' | PPOB / Jasa Keuangan (Cek Saldo)    | F-07: PPOB & Jasa Keuangan    | Cek batas saldo minimum |
+' | Menyimpan riwayat transaksi         | F-08: CRM Pelanggan           | Data pelanggan tersimpan |
+' | Pembatalan Pesanan (DP hangus)      | F-02: Transaksi Kasir         | Validasi status pesanan |
+' | Retur Barang (1x24 jam)             | F-02: Transaksi Kasir         | Validasi batas waktu |
+' ============================================
+
 ' ==========================================
 ' REFERENSI DOKUMEN:
-' 1. docs/sdlc/02_analysis/01_business_requirements.md
-' 2. docs/sdlc/02_analysis/02_software_requirements.md
-' 3. docs/sdlc/02_analysis/03_use_case_diagram.puml
-' 4. docs/sdlc/narasi.txt
+' 1. [BRD] docs/sdlc/02_analysis/01_business_requirements.md
+' 2. [SRS] docs/sdlc/02_analysis/02_software_requirements.md
+' 3. [UCD] docs/sdlc/02_analysis/03_use_case_diagram.puml
+' 4. [Narasi] docs/sdlc/narasi.txt
 ' ==========================================
 @enduml
