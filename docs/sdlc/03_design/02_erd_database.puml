@@ -2,13 +2,13 @@
 ' =================================================================================
 ' Nama Proyek: AbuCom — Sistem Manajemen Usaha Percetakan
 ' Deskripsi: Entity Relationship Diagram (ERD) — Visualisasi Relasi Seluruh Entitas Database
-' Versi: 1.0.0
+' Versi: 1.0.1
 ' Status: [draft]
 ' Database Target: MySQL 8.4 LTS Community Edition
 ' Total Entitas: 28 tabel
 ' Total Relasi: 39 relasi
 ' Tanggal Pembuatan: 2026-05-14
-' Persona: Senior Database Architect & Senior Data Modeler
+' Persona: Senior Database Architect + Senior Data Modeler + Technical Documentation Reviewer
 ' =================================================================================
 
 left to right direction
@@ -366,5 +366,6 @@ users ||--o{ audit_trail : "user_id"
 ' REFERENSI DOKUMEN:
 ' 1. docs/sdlc/03_design/01_database_schema.sql (Referensi Utama #1)
 ' 2. docs/sdlc/02_analysis/05_data_dictionary.md (Referensi Utama #2)
+' 3. docs/sdlc/narasi.txt (Referensi Konteks Bisnis)
 ' =================================================================
 @enduml
