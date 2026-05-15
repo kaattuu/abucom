@@ -4,8 +4,8 @@
 
 | Atribut | Detail |
 |---|---|
-| **Versi** | 1.0.0 |
-| **Status** | [draft] |
+| **Versi** | 1.1.0 |
+| **Status** | [finish] |
 | **Tanggal Dibuat** | 2026-05-15 |
 | **Disusun Oleh** | Senior Software Architect & Senior System Designer (AI) |
 
@@ -13,21 +13,36 @@
 
 Dokumen System Architecture ini disusun sebagai cetak biru teknis utama yang menjembatani fase Design menuju fase Implementation untuk Sistem Manajemen Usaha Percetakan "AbuCom". Dokumen ini mendefinisikan keseluruhan struktur teknis aplikasi, arsitektur berlapis, pola organisasi kode, struktur direktori, alur data antar komponen, strategi koneksi basis data, mekanisme keamanan, dan strategi penanganan error yang komprehensif.
 
-Aplikasi AbuCom dibangun dengan arsitektur yang memiliki batasan teknis yang mutlak: menggunakan antarmuka CLI monolitik lokal, ditulis dengan paradigma Functional Programming (FP) murni di Python 3.14.2+ (secara tegas menolak penggunaan `class` untuk logika bisnis), berinteraksi dengan pangkalan data MySQL 8.4 LTS, serta dirancang sejak hari pertama agar siap untuk ekspansi cabang jamak (*Multi-Branch Ready*).
+Aplikasi AbuCom dibangun dengan antarmuka Command Line Interface (CLI) lokal, menggunakan paradigma Functional Programming (FP) murni di Python 3.14.2+ (tanpa menggunakan `class` untuk logika bisnis), berinteraksi dengan pangkalan data MySQL 8.4 LTS, serta dirancang agar siap untuk ekspansi cabang (Multi-Branch Ready).
 
-## 3. Arsitektur Berlapis (Layered Architecture)
+## 3. Deployment Context
 
-Meskipun aplikasi ini merupakan aplikasi monolitik berbasis CLI yang dikembangkan dengan paradigma fungsional, struktur kode diorganisasikan dalam lapisan logis (*Layered Architecture*) untuk memisahkan tanggung jawab fungsionalitas dan memudahkan pemeliharaan kode oleh Junior Programmer.
+- **Sistem Operasi Target:** Linux Debian 12 Bookworm (kernel 6.1 LTS) dan Windows 11 24H2.
+- **Runtime Lingkungan:** Python 3.14.2+ (dijalankan via terminal standar).
+- **Basis Data:** MySQL 8.4 LTS Community Edition berjalan secara lokal.
+- **Distribusi:** Aplikasi dijalankan secara langsung dari *source code* (monolitik) tanpa perlu proses kompilasi (*build*). Konfigurasi *path* direktori lintas OS ditangani sepenuhnya oleh pustaka `pathlib`.
+
+## 4. Constraint & Batasan Teknis
+
+- **Tanpa Object-Oriented Programming (OOP):** Segala logika bisnis wajib diimplementasikan sebagai *pure functions*. Penggunaan `class` dilarang (kecuali `dataclass` dengan `frozen=True` jika benar-benar krusial untuk struktur data *read-only*).
+- **Tanpa Object-Relational Mapping (ORM):** Interaksi dengan basis data menggunakan `mysql-connector-python` secara fungsional. Hasil kueri wajib dikembalikan dalam bentuk *tuple* atau *dictionary* murni.
+- **Biaya Lisensi:** Seluruh komponen perangkat lunak (pustaka dan basis data) harus bersifat *open-source* tanpa biaya lisensi.
+- **Tanpa Antarmuka Grafis (Fase 1):** Aplikasi sepenuhnya berbasis teks (CLI) tanpa implementasi Web atau Desktop GUI.
+- **Global State Dilarang:** Tidak ada variabel *global* untuk sesi. Data *state* diteruskan secara fungsional antar lapis arsitektur.
+
+## 5. Arsitektur Berlapis (Layered Architecture)
+
+Meskipun aplikasi ini merupakan aplikasi monolitik berbasis CLI yang dikembangkan dengan paradigma fungsional, struktur kode diorganisasikan dalam lapisan logis untuk memisahkan tanggung jawab dan memudahkan pemeliharaan.
 
 Lapisan yang digunakan adalah:
 
-1. **Presentation Layer (CLI)**: Lapisan terluar yang menangani antarmuka pengguna di terminal. Bertanggung jawab merender menu berbasis angka, memproses input *prompt* dari keyboard, dan mencetak output visual (tabel ASCII, format slip digital) ke layar. Lapisan ini tidak memiliki logika bisnis.
-2. **Application/Service Layer**: Lapisan operasional yang bertugas menampung sekumpulan *pure functions* berisi logika bisnis utama dari 20 modul aplikasi (misal: perhitungan HPP dari struktur BOM, komputasi skema persentase gaji vs batas 15 juta, dan potongan kasbon). 
-3. **Data Access Layer**: Lapisan terbawah yang berisi perantara komunikasi dengan MySQL. Berfungsi sebagai pembungkus fungsional eksekusi `cursor.execute()`, melakukan komitmen dan `rollback` transaksi, serta memformat hasil kembalian database ke dalam bentuk *immutable data* Python (berupa *tuple* atau *dict* murni).
-4. **Security Layer**: Lapisan pemroses keamanan yang mengeksekusi pemeriksaan *hashing* `bcrypt`, ekstraksi dan validasi token JWT, pengaturan filter *Role-Based Access Control* (RBAC), serta pencatatan persisten log rekam jejak (*audit trail*).
-5. **Utility/Infrastructure Layer**: Kumpulan fungsi teknis penunjang di luar bisnis lintas lapisan. Berfungsi mengelola variabel `.env` dengan `python-dotenv`, resolusi path direktori lintas OS (`pathlib`), manajemen waktu (*datetime*), fungsionalitas generator nama berkas standar, serta skrip utilitas mandiri cadangan (pencadangan dump terenkripsi).
+1. **Presentation Layer (CLI)**: Lapisan terluar yang menangani antarmuka pengguna di terminal. Bertanggung jawab merender menu berbasis angka, memproses input dari keyboard, dan mencetak output visual (tabel ASCII, slip digital) ke layar. Lapisan ini mendelegasikan logika bisnis ke lapisan di bawahnya.
+2. **Application/Service Layer**: Lapisan operasional yang berisi kumpulan fungsi murni (*pure functions*) yang merepresentasikan logika bisnis dari 20 modul aplikasi (misal: perhitungan HPP dari BOM, perhitungan skema gaji, pengelolaan keranjang kasir).
+3. **Data Access Layer**: Lapisan terbawah yang menangani interaksi langsung dengan MySQL. Lapisan ini membungkus eksekusi fungsi SQL, menangani transaksi (commit/rollback), dan memformat data kembalian ke dalam struktur data yang *immutable* (*tuple* atau *dict*). Semua eksekusi SQL menambahkan filter *soft delete* (`is_deleted = 0`).
+4. **Security Layer**: Lapisan keamanan terpusat yang mengeksekusi pemeriksaan *hashing* dengan `bcrypt`, validasi dan ekstraksi payload `pyjwt`, penegakan *Role-Based Access Control* (RBAC), serta pencatatan audit (*audit trail*).
+5. **Utility/Infrastructure Layer**: Lapisan pendukung lintas modul. Berfungsi mengelola variabel `.env` dengan `python-dotenv`, resolusi path direktori (`pathlib`), serta fungsi generator utilitas lainnya.
 
-**Aturan Komunikasi Lapisan:** Lapisan atas diperbolehkan untuk memanggil fungsi dari lapisan bawahnya secara langsung. Namun, aturan arsitektural menetapkan dengan sangat keras: lapisan bawah **TIDAK DIPERBOLEHKAN** sekalipun untuk memanggil lapisan di atasnya.
+**Aturan Komunikasi Lapisan:** Lapisan atas diperbolehkan untuk memanggil fungsi dari lapisan bawahnya secara langsung. Namun, aturan mutlak menyatakan bahwa lapisan bawah **TIDAK DIIZINKAN** untuk memanggil lapisan di atasnya.
 
 ```mermaid
 graph TD
@@ -42,9 +57,19 @@ graph TD
     E --> D
 ```
 
-## 4. Struktur Direktori Proyek
+### 5.1. Dependency Map (Pemetaan Pustaka per Lapisan)
 
-Aplikasi memetakan 20 modul fungsional dari *Project Charter* secara terpusat. Direktori disusun mengutamakan kemudahan pelacakan penempatan *pure functions*.
+| Lapisan | Pustaka Utama | Fungsi Pustaka pada Lapisan |
+|---|---|---|
+| Presentation | Pustaka Standar Python | Menangani `input()` dan `print()` ke *stdout*. |
+| Application | Pustaka Standar Python | Menggunakan fungsi bawaan `map()`, `filter()`, `reduce()`. |
+| Data Access | `mysql-connector-python` | Mengeksekusi kueri `cursor.execute()`, mengelola koneksi dan transaksi ACID. |
+| Security | `bcrypt`, `pyjwt` | Mengamankan *password* (`bcrypt`) dan menerbitkan otorisasi sesi (`pyjwt`). |
+| Utility | `python-dotenv` | Membaca dan memuat variabel lingkungan dari berkas `.env` lokal. |
+
+## 6. Struktur Direktori Proyek
+
+Direktori disusun mengutamakan kemudahan pelacakan penempatan *pure functions*.
 
 ```text
 abucom/
@@ -55,92 +80,93 @@ abucom/
 │   ├── menus.py                # Fungsi render navigasi dinamis berdasar RBAC
 │   └── handlers.py             # Fungsi promt masukan pengguna CLI
 ├── services/                   # [Application/Service Layer]
-│   ├── cashier_service.py      # Transaksi Kasir Multi-Lini, Harga Grosir/Mitra, Batal/Retur
+│   ├── cashier_service.py      # Transaksi Kasir, Harga Grosir/Mitra, Pembatalan/Retur
 │   ├── inventory_service.py    # Gudang Stok, BOM, HPP Produksi, Waste Management
 │   ├── job_tracking_service.py # Pelacakan Status Antrian & Lokasi Desain
 │   ├── hr_payroll_service.py   # SDM, Kehadiran, Kasbon, Skema Penggajian, Poin Insentif
 │   ├── finance_service.py      # Transaksi PPOB, Jasa Keuangan Bank, Hutang Piutang
-│   └── crm_report_service.py   # Pelanggan, Laba Rugi, Rekonsiliasi Fisik Laci
+│   └── crm_report_service.py   # Pelanggan, Laba Rugi, Rekonsiliasi Kas Fisik
 ├── data/                       # [Data Access Layer]
-│   ├── connection.py           # Inisiasi koneksi mysql-connector-python dan konfigurasi cursor
+│   ├── connection.py           # Inisiasi koneksi mysql-connector-python murni
 │   ├── queries.py              # Fungsi eksekusi query (CRUD FP Tuple-Based)
 │   └── migrations/             # Kumpulan file inisiasi DDL schema MySQL
 ├── security/                   # [Security Layer]
 │   ├── auth.py                 # Pengecekan sandi bcrypt dan penerbitan sesi JWT 8 jam
-│   ├── rbac.py                 # Filter hak otonom dan blokir akses ke data milik 'Pemilik'
-│   └── audit.py                # Pemasukan rekaman wajib ke entitas audit_trail 
+│   ├── rbac.py                 # Filter peran akses (Role-Based Access Control)
+│   └── audit.py                # Pemasukan rekaman log riwayat ke entitas audit_trail 
 └── utils/                      # [Utility/Infrastructure Layer]
     ├── config.py               # Pemanggilan fungsi konfigurasi dasar os.getenv()
-    ├── formatters.py           # Kalkulasi tabel ASCII, konvensi nama desain, konversi numerik desimal
-    └── backup.py               # Skrip pendukung pencadangan basis data lokal mysqldump
+    ├── formatters.py           # Kalkulasi tabel ASCII, konvensi nama desain
+    └── backup.py               # Skrip otomatis pencadangan basis data lokal (mysqldump)
 ```
 
-## 5. Alur Data Utama (Data Flow)
+## 7. Alur Data Utama (Data Flow)
 
-Dalam ekosistem tanpa OOP, rangkaian penyelesaian bisnis digubah dalam wujud rentetan panggilan (*chain/composition*) dan eksekusi komputasi fungsi murni.
+Dalam ekosistem *Functional Programming*, penyelesaian logika bisnis diterapkan dalam wujud rentetan panggilan komposisi (*function composition*) dari fungsi-fungsi murni.
 
-### 5.1. Alur Autentikasi (Login)
+### 7.1. Alur Autentikasi (Login)
 1. **Input CLI**: `prompt_login()` meminta `username` dan `password` di layar.
-2. **Validasi (*Verify*)**: Pemanggilan ke Security Layer untuk menarik string hash dari `users` di basis data MySQL.
-3. **Pencocokan**: Memanggil `bcrypt.checkpw()` — membandingkan parameter *password* dengan rekaman. Bila salah 5x berturut-turut, fungsi akan mengeksekusi `UPDATE` mengubah `is_locked = 1`.
-4. **JWT Generate**: Bila berhasil, fungsi otentikasi memanggil rutin *encode* `pyjwt`, men-generate *payload* berisi parameter `user_id`, `role`, dan `branch_id`, beserta durasi kadaluarsa 8 jam.
-5. **Session Store**: Token JWT mendarat di *state* parameter dalam tabel `login_sessions`. Fungsi `log_audit()` otomatis dijalankan guna mencatat bukti `LOGIN`.
-6. **Menu Render**: Pemanggilan ke lapisan tampilan. Filter mengekstrak `role` untuk menyaring dan merender menu sesuai otoritas yang diakui.
+2. **Validasi (*Verify*)**: Fungsi keamanan menarik data *hash* pengguna dari pangkalan data MySQL berdasarkan identitas *username*.
+3. **Pencocokan**: Memanggil `bcrypt.checkpw()`. Jika salah, fungsi penghitung inkremental menambahkan kegagalan login (*failed attempt*). Pada percobaan gagal ke-5 berturut-turut, sistem mengubah kolom `is_locked = 1`.
+4. **JWT Generate**: Bila berhasil, `jwt.encode()` menerbitkan *payload* berisi `user_id`, `role`, dan `branch_id`, beserta durasi kedaluwarsa 8 jam.
+5. **Session Store**: Token disimpan ke dalam tabel `login_sessions`. Fungsi rekam jejak mencatat kejadian aktivitas "LOGIN" di `audit_trail`.
+6. **Menu Render**: Filter RBAC membaca status `role` pada *payload* JWT untuk menampilkan daftar menu CLI yang diizinkan. Pengguna yang membiarkan sesi tidak aktif selama 10 menit akan dikeluarkan secara otomatis (*idle timeout*).
 
-### 5.2. Alur Transaksi Kasir Multi-Lini
-1. **Pemilihan Item**: Fungsi *prompt* CLI meminta jenis pesanan (1. Cetak 2. ATK 3. Layanan PPOB), ID produk, dan jumlah item (*qty* desimal presisi).
-2. **Kalkulasi Tier**: *Service Layer* mengambil tipe tier harga `pricing_tiers`. Melalui fungsi `calculate_subtotal`, program mengecek `qty` (grosir bila >= 50) atau `min_active_months` (mitra aktif 3 bulan) tanpa mengganti status basis. Menghitung tagihan DP bila ada pelunasan 50%.
-3. **Kalkulasi BOM & HPP**: Bagi pesanan layanan percetakan, *Service Layer* meminta matriks *Bill of Materials* (`bom`). Fungsi reduksi mengekstrak parameter konversi bahan, menghasilkan rincian nilai total material untuk disematkan sebagai komponen `item_hpp`. 
-4. **Potong Stok & Catat**: Data parameter dikemas. Fungsi Data Access mengawali `start_transaction()`. Menulis sisipan log transaksi ke `transactions` dan detail pada `transaction_items`. Melakukan `UPDATE` fungsi pengurangan persediaan bahan presisi tinggi di relasi `materials`.
-5. **Audit**: Memanggil parameter eksekusi modul keamanan untuk menyimpan baris rekaman baru ke dalam relasi `audit_trail`. Keseluruhan rangkaian ditutup aman dengan klausa mutasi permanen `commit()`.
+### 7.2. Alur Transaksi Kasir Multi-Lini
+1. **Pemilihan Item**: Fungsi meminta jenis pesanan (Cetak, ATK, PPOB), ID produk, dan jumlah item (*qty* desimal presisi).
+2. **Kalkulasi Harga**: Fungsi mengambil data dari `pricing_tiers`. Skema dievaluasi (harga Grosir bila *qty* >= 50, harga Mitra jika masa aktif pelanggan >= 3 bulan). Sistem menghitung uang muka (DP) bila pelunasan ditunda (minimal 50%).
+3. **Kalkulasi BOM & HPP**: Untuk pesanan layanan percetakan, *Service Layer* mengambil data *Bill of Materials* (`bom`). Fungsi reduksi menghitung kebutuhan pemotongan stok bahan baku berdasarkan persentase desimal dan menghasilkan nilai Harga Pokok Penjualan (HPP).
+4. **Potong Stok & Transaksi**: Fungsi memanggil `start_transaction()`. Menulis transaksi ke tabel `transactions` dan detail pada `transaction_items`. Mengubah persediaan melalui kueri pada tabel `materials` sejumlah yang digunakan di HPP.
+5. **Audit & Penutup**: Memanggil fungsi log untuk menyimpan baris di `audit_trail` secara imutabel, lalu mengeksekusi komitmen mutasi database secara permanen dengan `commit()`.
 
-### 5.3. Alur Penggajian Cerdas (Payroll)
-1. **Trigger Manual**: Menjalankan instruksi `[TRIGGER PAYROLL]` dari rentetan menu CLI *HR*.
-2. **Hitung Pendapatan Bisnis**: Fungsi agregasi filter murni merangkum rekap semua total pendapatan usaha unit terkait dari riwayat transaksi.
-3. **Tentukan Skema Gaji Pokok**: *Pure function* logika kalkulasi berjalan: Bila pendapatan usaha menyentuh Rp 15.000.000, karyawan disetel `base_salary = Rp 3.000.000`. Jika pendapatan usaha gagal memuaskan limit tersebut, komputasi berganti dengan pengembalian variabel senilai 15% dari pendapatan bersih.
-4. **Hitung Poin Insentif & Kasbon**: Fungsi menyerap total `incentive_points` (nilai komisi terfilter rutin/dasar/kustom/berat berbobot rasio poin ekuivalen uang tunai) dan menghitung nilai persentase pemotongan hutang berjalan dari tabel `employee_loans`. 
-5. **Generate Slip Gaji**: Fungsi kalkulasi membalik *output* menjadi `net_salary` final, dicatat ke relasi tabel `payroll`, serta dirender apik menembus tampilan CLI teks bagi arsip historis. `log_audit()` menyusul menempel di *database*.
+### 7.3. Alur Penggajian Cerdas (Payroll)
+1. **Trigger Manual**: Menjalankan instruksi komputasi penggajian dari menu CLI terkait modul HR.
+2. **Hitung Pendapatan**: Fungsi *reduce* merangkum nilai total pendapatan usaha unit terkait pada bulan berjalan dari riwayat transaksi.
+3. **Penentuan Skema**: Logika murni diterapkan: Bila pendapatan operasi mencapai Rp 15.000.000 bersih, komponen gaji pokok `base_salary` dikunci di nilai Rp 3.000.000. Jika kurang dari itu, komputasi menggunakan rasio bagi hasil sebesar 15% dari pendapatan bersih bulan itu.
+4. **Insentif & Kasbon**: Fungsi mengakumulasikan nilai riwayat pekerjaan di `incentive_points` (berdasarkan kategori Rutin/Dasar/Kustom/Teknis Berat) menjadi nominal bonus rupiah, serta mengurangi tanggungan hutang internal pada `employee_loans` (kasbon).
+5. **Slip Gaji Digital**: Hasil keluaran disalin ke entitas tabel `payroll` dan dirender sebagai format teks slip gaji pada antarmuka CLI. Pembuatan entitas ini akan dicatat mutasinya oleh modul audit.
 
-## 6. Strategi Koneksi Database (FP Pattern)
+## 8. Strategi Koneksi Database (FP Pattern)
 
-Proyek ini mempertahankan konvensi *Functional Programming* murni untuk komunikasi I/O. Arsitek mengenyahkan model paradigma *class Object-Relational Mapping* (ORM) seperti SQLAlchemy.
+Pendekatan *Functional Programming* murni menolak paradigma arsitektur Object-Relational Mapping (ORM) seperti SQLAlchemy. Interaksi ke pangkalan data direkayasa dengan standar FP:
 
-- **Koneksi Secara Stateless**: Tiada deklarasi instansiasi *class* atau kumpulan interaksi berkelanjutan model *Connection Pool*. Aplikasi memuat fungsi tunggal `create_connection()`, yang mengambil token kredensial `.env` dan melontarkan seutas objek sambungan jaringan.
-- **Pola Transaksi ACID**: Tiap fungsi interaksi tulis mutasi (Ubah/Hapus/Tambah) merangkul komputasi melalui inisialisasi perisai `connection.start_transaction()`. Jika segala komputasi mulus, blok penutup fungsional mengukuhkan parameter final melalui `connection.commit()`. Jika terdeteksi eksepsi kesalahan (contoh sisa saldo persediaan memantul dari nol absolut), instruksi pembatalan darurat digebrak melalui blok pengecualian komputasi `connection.rollback()`.
-- **Hasil Data Tuple Immutable**: Keputusan *Tech Stack* mematutkan perpustakaan resmi *mysql-connector-python*. Pengembalian respon data *query* dari database bukan sebagai susunan atribut OOP, melainkan murni terstruktur koleksi larik berlapis (*tuple*). Operasi `map` dan `filter` bawaan Python mengeksekusi operasi secara presisi di memori RAM murni dan cepat membebaskannya kembali (*garbage collection*).
-- **Pengikatan Injeksi Konsisten `branch_id`**: Objek nomor cabang identitas tidak pernah dipasangkan di lokasi lingkungan global aplikasi. Semua eksekusi *query* wajib dihidupkan dengan pelekatan parameter injeksi sintaks berbunyi eksplisit `WHERE branch_id = ?`.
+- **Koneksi Secara Stateless**: Aplikasi tidak menggunakan instansiasi objek koneksi yang dikelola via *class pool*. Aplikasi memanggil fungsi tunggal `create_connection()` yang membaca token lokal dari `.env` dan mengembalikan referensi objek koneksi sesaat.
+- **Pola Transaksi ACID**: Fungsi mutasi menulis (`INSERT`, `UPDATE`) selalu berada di dalam kontrol pemanggilan `connection.start_transaction()`. Bila fungsi bisnis berjalan tanpa kendala, fungsi diakhiri dengan `connection.commit()`. Jika terdeteksi eksepsi (seperti validasi gagal atau stok kurang), sistem akan membatalkan rangkaian instruksi secara otomatis dengan `connection.rollback()`.
+- **Hasil Data Tuple Immutable**: Menggunakan pustaka resmi *mysql-connector-python*, hasil kueri database dikembalikan langsung dalam format data dasar bawaan Python (*tuple* atau struktur *dictionary* baru). Proses filter akan menggunakan `map()` atau `filter()` bawaan sehingga siklus rilis memori (*garbage collection*) bekerja cepat di RAM.
+- **Pengikatan Injeksi Konsisten `branch_id`**: Identitas nomor cabang tidak pernah ditetapkan sebagai variabel status *global*. Semua pemanggilan fungsi yang berinteraksi dengan tabel transaksional wajib melekatkan injeksi eksplisit klausa penapis lokasi berbunyi `WHERE branch_id = ?`.
 
-## 7. Arsitektur Keamanan
+## 9. Arsitektur Keamanan
 
-Lapisan Arsitektur Security membaur sebagai penyekat batas di tiap ujung pangkal siklus peredaran *state* komunikasi memori, melindungi eksploitasi peretas internal:
+Lapisan Arsitektur Security berperan melindungi integritas data operasional:
 
-- **Alur Integritas Autentikasi JWT**: Aplikasi menciptakan identitas pasca-sandi otentik dengan mengkonstruksi penamaan parameter rahasia *payload* berisi status hierarki (`role`, `user_id`, `branch_id`). Penamaan parameter tersebut ditandatangani melalui injeksi kunci statis rahasia (`HS256`). Fungsi validasi menyiksa JWT membuang sesi berkaliber masa tenggat 8 jam, mematikan JWT dan menghancurkan referensinya di persistensi tabel `login_sessions` secara mutlak bila kasir mencoba *Logout*.
-- **Pola Role-Based Access Control (RBAC)**: Tidak butuh pengecekan berulang ke MySQL yang memakan *latency*, sistem menapis otorisasi secara kilat menggunakan muatan parameter ekstrak dari JWT `payload`. Apabila Karyawan memaksa masukan angka CLI milik laporan `loans` (Pinjaman Bank) yang merupakan hak prerogatif *Pemilik*, sistem seketika membalik status penolakan mutlak. Perintah SQL juga diperkuat dengan argumen kondisional ganda (`WHERE employee_id = ?` bagi operasional terbatas).
-- **Audit Trail Imutabel**: Log tidak ditulis melalui intervensi tangan pengguna layar. Rutin log fungsional rahasia dipanggil pada akhir deret blok *commit()* dan selalu menyuntik riwayat mutasi *fraud* absolut (siapa pelakunya, data manipulasi transaksional dan nilai asal) mendalam ke gudang tabel pengawasan permanen `audit_trail`.
-- **Integrasi Penuh 5 Inovasi**: 
-   - Modul Keamanan mengaplikasikan fungsi pendeteksi *timeout* terminal. Pemantauan interupsi jeda ketiadaan komputasi masukan kasir melampaui rentang **10 menit** bakal mendepak operator dari ruang kerja (`JWT Session Invalidation`). Skrip perlindungan tambahan menghitung akumulasi ancaman sandi *brute-force* yang langsung melock akses sesi selamanya pada ketidaksesuaian sandi iterasi **ke-5**.
-   - *Soft Delete Framework*: Keamanan forensik mutlak dijamin dengan parameter logikal *query* universal. Perintah kueri perombak relasional `DELETE FROM` dibasmi. Sistem mendelegasikan rutinitas pengapusan berkas usang maupun pembatalan semata-mata dengan fungsi kueri transisi mutasi `UPDATE ... SET is_deleted = 1 WHERE id = ?`. Seluruh rutin pembaca memagari dirinya otomatis dari tumpukan sampah usang data menggunakan jala tangkapan absolut (`WHERE is_deleted = 0`).
-   - *Validasi PIN Finansial Suspicious*: Sistem menangguhkan transaksi transfer rekening digital berskala gigantik (Ambangan Peringatan Kritis: transaksi finansial kumulatif melampaui titik kritis Rp 5.000.000). Eksekusi transaksional mengganjal dan mendesak otoritas *Pemilik* menginput sandi identitas bcrypt, menggugurkan seketika bila pin salah/kadaluwarsa.
-   - Pembangkit fungsi standardisasi konvensi format identifikasi (`Generator Naming Design`) mencegah perselisihan operasional penamaan direktori, dan perangkat fungsi cadangan MySQL (`Encrypted Backup Util`) menstabilkan keutuhan data terhadap risiko malapetaka alam di lokasi toko ritel maupun peretasan jaringan *ransomware*.
+- **Autentikasi JWT Stateless**: Aplikasi menggunakan kunci rahasia (*secret_key*) algoritma tipe `HS256`. Token memuat struktur *payload* dengan informasi level `role`, `user_id`, `branch_id`. Token juga memiliki masa tenggat (*exp*) maksimum 8 jam.
+- **Idle Auto-Logout & Brute-Force Protection**: Proses memantau waktu aktivitas input CLI kasir. Jika tidak ada aktivitas apa pun selama durasi 10 menit berturut-turut, sistem akan invalidasi sesi JWT lokal secara paksa (*idle timeout*). Aplikasi juga mengunci akun dengan skema logikal saat deteksi kesalahan *login* mencapai 5 kali kegagalan (*Brute-force protection*).
+- **Role-Based Access Control (RBAC)**: Tidak diperlukan pemeriksaan basis data yang berulang; sistem menapis tingkat otorisasi berdasarkan muatan tingkat peran yang sudah diekstrak saat verifikasi token awal. Jika akses ditolak, nilai yang dikembalikan adalah penolakan mutlak.
+- **Soft Delete Framework**: Eksekusi perintah SQL pembongkar relasional `DELETE FROM` dilarang. Mekanisme penghapusan dilakukan secara logikal dengan memanggil rutin kueri pembaruan nilai kolom `UPDATE [tabel] SET is_deleted = 1 WHERE id = ?`. Seluruh proses pengambilan data wajib menyelipkan kondisi tambahan penapis aktif `WHERE is_deleted = 0`.
+- **Validasi PIN Transaksi Finansial**: Memiliki batasan limit transfer finansial sebesar Rp 5.000.000. Setiap pengeluaran mutasi jasa keuangan di atas limit tidak bisa di-`commit()` langsung melainkan harus menunggu verifikasi sandi (hash) akun `Pemilik` di dalam *prompt* CLI menggunakan *bcrypt*.
+- **Generator Tata Nama File Desain Standar**: Mencegah salah penyusunan laporan direktori desain. Sistem secara otomatis membuat penamaan berkas standar yang harus disalin karyawan ketika pesanan berubah menjadi status "Proses Desain". Formatnya: `[TANGGAL]_[KODE_ORDER]_[NAMA_PELANGGAN]_[ITEM]`.
+- **Pencadangan Database Otomatis**: Dilakukan utilitas file `backup.py` yang berjalan di *background* via *cron job* di Linux atau *Task Scheduler* di Windows. Data terekspor via alat internal MySQL (`mysqldump`) kemudian dikompres dan dilindungi enkripsi sandi dengan siklus penahanan retensi data terlama 30 hari.
+- **Audit Trail Imutabel**: Semua fungsi pencatatan riwayat transaksional menuliskan data detail mutasi pada entitas `audit_trail` (insert log rahasia). Hal ini menjamin visibilitas kronologi penuh (berdasarkan pengguna, rincian manipulasi spesifik, serta tanggal).
 
-## 8. Strategi Penanganan Error
+## 10. Strategi Penanganan Error
 
-Perangkat arsitektur AbuCom mensinyalkan model tangkapan insiden operasional perisai lunak. Kesalahan ditanggulangi ketat pada simpul lapisan terbawah dan tidak dibocorkan sembarangan:
+Perangkat arsitektur AbuCom menerapkan pola pengamanan pesan error agar pengguna atau pihak asing tidak bisa mendiagnosis sistem secara langsung:
 
-- **Sekuestrasi Tumpukan (Stack Trace Hiding)**: Tiada sekalipun layar kasir/pelanggan diperbolehkan memperoleh muntahan *stack trace Python*, kompilasi relasional kode *SQL Server Query Error*, atau celah bocor jejak berkas *path OS*. Tangkapan fungsional membalut blok (`try-except`) secara konsisten.
-- **Pesan Antarmuka CLI Ramah**: Laporan kegagalan direduksi menjadi konvensi pesan ramah operasional yang baku, seperti "Peringatan: Kesalahan Validasi. Pastikan parameter input komputasi Anda terisi nilai logis", dengan parameter log yang jauh lebih lengkap di-*dump* secara privat ke gudang pelaporan pelacakan log teks tersembunyi.
-- **Rollback Otomatis di Tengah Transaksi**: Fungsi *Data Access* mendeteksi kiamat interupsi transaksi. Jika terputus separuh proses, pemanggilan *state-passing* fungsi murni langsung mendikte basis data agar melaksanakan pemulihan absolut `connection.rollback()`.
+- **Penyembunyian Tumpukan Trace (Stack Trace Hiding)**: Layar terminal kasir maupun pelanggan sama sekali tidak boleh menampilkan kesalahan seperti *stack trace Python*, pesan struktur tata bahasa SQL, maupun bocoran *path OS* server. Pengecualian wajib dibalut dalam blok fungsi fungsional penjaga `try-except`.
+- **Pesan Antarmuka CLI Ramah**: Laporan kegagalan direduksi ke kalimat peringatan sederhana bagi kelancaran operasional toko. Misal, "Peringatan: Kesalahan validasi data transaksi. Nilai yang dimasukkan tidak logis." Detail lengkap log disimpan di latar belakang internal.
+- **Rollback Otomatis di Tengah Transaksi**: Memastikan data separuh proses tidak dibiarkan menggantung, modul pelaksana fungsi akan mengirimkan arahan pembatalan komputasi basis data mutlak melalui `connection.rollback()`.
 
-## 9. Arsitektur Multi-Branch Ready
+## 11. Arsitektur Multi-Branch Ready
 
-Sebagai tonggak jaminan stabilitas ekspansi komersil usaha ritel, sistem dilarang menggunakan resep pemrograman terikat pada konteks toko fisik sebidang (*Single-Tenant*):
+Sistem dibangun sejak hari pertama tidak hanya berorientasi tunggal:
 
-- Fungsi fungsional `branch_id` bertindak laksana perisai isolasi pemisah absolut pada seluruh entitas relasional operasional database (*transaction, inventory, HR*).
-- Posisi nilai dari angka parameter absolut tersebut dikelola pada baris depan parameter utama yang mengomputasi I/O modul persediaan logistik `Service Layer`.
-- Nilai identitas diekstrak langsung tanpa keterlibatan pengguna dari jantung rahasia otentikasi JWT saat momen transisi otentikasi sesi `Login`.
-- Basis komputasi kode secara paksa menolak kehadiran penyusunan string SQL dinamis interaktif dan kueri modifikasi tabel apa pun, andai kueri tersebut luput memberikan injeksi absolut klausa penapis lokasi berbunyi `WHERE branch_id = ?`.
+- Entitas `branch_id` bertindak sebagai batasan isolasi pada seluruh entitas relasional operasional database (misal tabel logistik, transaksi, kasir, karyawan).
+- Nilai identitas ini dibaca dengan murni dari parameter rahasia di dalam token otentikasi JWT saat momen verifikasi `Login`.
+- Seluruh baris kode penyusunan kueri modifikasi tabel diwajibkan secara mutlak menyelipkan logika `WHERE branch_id = ?` ke dalam klausa pembatasan eksekusinya.
 
-## 10. Pemetaan Modul ke Entitas Database
+## 12. Pemetaan Modul ke Entitas Database
+
+Semua 20 modul fungsional dari *Project Charter* dipetakan secara ketat ke struktur tabel DDL:
 
 | Modul Fungsional | Tabel Database Utama | Tabel Database Pendukung |
 |---|---|---|
@@ -155,45 +181,89 @@ Sebagai tonggak jaminan stabilitas ekspansi komersil usaha ritel, sistem dilaran
 | (9) Antrian & Job Tracking | `orders_job_tracking`, `transactions` | `customers` |
 | (10) SDM & Penggajian | `employees`, `employee_attendance` | `payroll`, `employee_loans` |
 | (11) Poin Karyawan | `incentive_points`, `employees` | `payroll` |
-| (12) Pinjaman | `employee_loans`, `loans` | `employees` |
+| (12) Manajemen Pinjaman | `loans`, `employee_loans` | `employees` |
 | (13) Keuangan & Pelaporan | `cash_reconciliation`, `routine_expenses` | `transactions`, `payments`, `payroll` |
-| (14) Aset | `assets`, `asset_savings` | `routine_expenses` |
-| (15) Supplier & Hutang | `vendors`, `materials` | `loans` |
-| (16) CRM Pelanggan | `customers`, `transactions` | `pricing_tiers` |
+| (14) Manajemen Aset | `assets`, `asset_savings` | `routine_expenses` |
+| (15) Supplier & Hutang Usaha | `vendors`, `materials` | `loans` |
+| (16) Database Pelanggan (CRM) | `customers`, `transactions` | `pricing_tiers` |
 | (17) Keamanan & Audit | `users`, `audit_trail` | `login_sessions` |
-| (18) Input Data Awal | Seluruh Tabel Master | Seluruh Tabel Master |
+| (18) Input Data Awal (Migrasi) | Seluruh Tabel Master | Seluruh Tabel Pendukung |
 | (19) Arsitektur Multi-Cabang | `branches` | Seluruh Tabel Transaksional |
-| (20) Inovasi & Best Practice | `audit_trail` | `orders_job_tracking`, `users` |
+| (20) Inovasi & Best Practice | `audit_trail`, `orders_job_tracking` | `users`, Seluruh Tabel (`is_deleted`) |
 
-## 11. Standar Kode FP (Functional Programming) yang Wajib Diterapkan
+## 13. Standar Kode FP (Functional Programming) yang Wajib Diterapkan
 
-Sistem mengharamkan segala manifestasi deklaratif arsitektur pemrograman *Object-Oriented Programming* (OOP). Perancang kode *(AI/Junior)* wajib memastikan kriteria kepatuhan kode FP:
+Sistem secara ketat melarang pendekatan desain Object-Oriented Programming (OOP). Pengembang aplikasi ini wajib memastikan setiap arsitektur berbasis prinsip dasar FP murni:
 
-- **Semua Fungsi adalah Fungsi Murni (*Pure Functions*)**: Setiap eksekusi hanya menyandarkan diri pada rincian argumen input yang dilemparkan, menampik manipulasi nilai statik luar, serta selalu memproduksi hasil yang identik pada masukan parameter yang ekuivalen. Terbebas absolut dari malapetaka mutasi jejak statik.
-- **Struktur Data Kebal Variabel (*Immutable Data*)**: Variabel asli tabel atau wadah status pelaporan sama sekali diharamkan diperbarui sepihak (contoh OOP pelarangan mutlak `user.role = 'Pemilik'`). Pengalihan variabel murni dikembangkan pada kerangka duplikasi pembaharuan berwujud konstruksi pengembalian struktur data bawaan Python mutlak (`tuple`, `frozenset`, susunan `dict` baru yang disalin).
-- **Haram Menggunakan Kelas Instansi**: Kata kunci `class` dilarang. Segala manipulasi state ditransfer operasional. (Bila benar-benar genting dibutuhkan sebagai selubung pengirim paket data antar-lapisan fungsional yang terlalu lebar, *dataclass* dengan atribut `frozen=True` merupakan kompensasi maksimal yang diloloskan).
-- **Konvensi Fungsi Fungsional Tingkat Tinggi (*Higher Order Function*)**: Kewajiban pengolahan tabel, manipulasi format cetak struk nota, laporan keuangan bulanan wajib menggunakan kombinasi fungsi pemetaan *iterator* `map()`, penyaring filter sekuriti mutlak ganda `filter()`, dan akumulasi rekapitulasi data saldo harian memakai kalkulator pelipatan Python murni `functools.reduce()`.
+- **Fungsi Murni (*Pure Functions*)**: Setiap pemanggilan dan pengembalian hasil didasari mutlak oleh argumen *input*. Modul menghindari *side effect* serta modifikasi nilai variabel global di luar fungsinya. Hasil pemanggilan data selalu diproses dan diubah wujud baru yang identik jika input-nya konsisten.
+- **Struktur Data Imutabel (*Immutable Data*)**: Variabel penampung hasil query dihindari pembaruan di memori *in-place*. Modul wajib menggunakan tupel `tuple` atau membangun ulang larik dasar struktur kamus data (`dictionary` murni yang ter-salin mandiri) bawaan memori Python.
+- **Tanpa Representasi Kelas**: Kata kunci `class` dilarang digunakan untuk pembentukan bisnis (*business entity representation*). Seluruh proses modifikasi direpresentasikan dalam bentuk argumen penerus. `dataclass` hanya dibolehkan sebagai pengecualian minor bila atribut `frozen=True` diselipkan spesifik bagi transfer beban data besar paket antarlapis logika bisnis.
+- **Fungsi Tingkat Tinggi (*Higher Order Function*)**: Operasi pembacaan filter data kolektif tabel rekapitulasi, pengaturan hasil laporan bulanan, diwajibkan memanfaatkan iterator dasar komprehensi memori Python lewat penggunaan metode `map()`, fungsi `filter()`, serta fungsi agregat dasar `functools.reduce()`.
 
-## 12. Panduan Eksekusi dan Poin Tambahan Spesifik
+**Contoh Kode (Batasan FP vs OOP):**
 
-- **Strategi Entry Point Tunggal (main.py)**: Kode `main.py` dibariskan sebagai sutradara antarmuka operasi sistem CLI utama. Komputasi menelan fungsi *pure* pembaca muatan variabel rahasia `os.getenv()`, menancapkan objek koneksi persisten *database mysql-connector*, dan meniup sangkakala eksekusi rutin utama *prompt handler* `start_cli_interface()`.
-- **Pola State Passing (Bukan Global State)**: Memori parameter status pengguna aktif tidak berdiam menetap membeku. Seluruh fungsi operasional saling berikatan dengan meneruskan rincian tupel (*state, koneksi db, jwt aktif, dan angka unit cabang branch_id*) bertubi-tubi dari selubung induk melintasi deretan komputasi dalam fungsi-fungsinya (*Passing context by arguments*). Tidak ada `global_session`.
-- **Pola Komposisi Fungsi Rantai (*Function Composition*)**: Arsitek tidak menggunakan resep warisan ganda OOP (Inheritance/Polymorphism). Rangkaian komputasi transaksi operasional mutlak mengakar pada struktur tumpukan linear pemrosesan data (Contoh pola berirama alur bisnis: `validate_input() -> check_pricing_tier() -> calculate_hpp() -> deduct_stock() -> record_transaction() -> log_audit()`).
-- **Strategi Rendering Menu CLI Berbasis Peran**: Daftar struktur susunan menu yang muncul pada terminal kasir bersifat reaktif dan dirender menyesuaikan isi JWT parameter hak wewenang. Menu operasi pencetakan rekap kerahasiaan seperti *Asset Savings* murni disingkirkan tanpa ampun, bukan semata dihitamkan atau di-*disable*, namun dicabut logikanya dan tidak diperlihatkan sekecil apapun di *console*.
-- **Strategi Konfigurasi Aplikasi Berdikari**: Nilai rahasia sandi (Kredensial SQL, rahasia *salt hashing* JWT, parameter batas transfer PIN finansial wajib limit) dikunci sepenuhnya via utilitas Python `.env` dengan pelindungan dari *version control Git*, demi memastikan rekam sandi diisolir terpisah dari relung peredaran *source code*.
+```python
+# DILARANG (OOP):
+# Menggunakan class dan merubah internal state secara in-place.
+# class TransactionService:
+#     def calculate(self): 
+#         self.total = self.price * self.qty
 
-## 13. Riwayat Versi
+# WAJIB (FP):
+# Fungsi murni mengembalikan tuple/data struktur baru.
+# def calculate_transaction(conn, branch_id, items) -> tuple:
+#     subtotal = sum(item['price'] * item['qty'] for item in items)
+#     return (items, subtotal)
+```
+
+## 14. Panduan Eksekusi dan Pola State Passing
+
+- **Strategi Entry Point Tunggal (main.py)**: Seluruh pemanggilan rutinitas eksekusi bersumber ke fail `main.py`. Skrip memanggil fungsi untuk membaca `.env` menggunakan paket modul `os.getenv()`, menghasilkan koneksi fungsi data persisten *database*, dan memulai pengait `start_cli_interface()`.
+- **Pola Komposisi Fungsi Rantai (*Function Composition*)**: Rangkaian logika bisnis tidak tersusun dalam struktur pewarisan (Inheritance) seperti OOP, melainkan dipanggil secara komposisi fungsional bertingkat, dengan hasil tangkapan satu fungsi menyeberang langsung sebagai argumen input di pemrosesan fungsi di lapisan selanjutnya.
+  *Contoh Alur Bisnis Transaksi*: `validate_input() -> check_pricing_tier() -> calculate_hpp() -> deduct_stock() -> record_transaction() -> log_audit()`
+- **Pola State Passing**: Sistem membuang semua deklarasi sesi `global_session`. Seluruh variabel informasi lingkungan seperti tupel (*state antarmuka aktif, referensi modul koneksi db, data sesi eksekusi JWT aktif, identitas unit* `branch_id`) tidak pernah menetap statik. Melainkan selalu di-pas (*Context Passing* / *State Passing*) sebagai baris tambahan penerus parameter argumen fungsi ke modul yang memanggilnya.
+
+**Contoh Pola State Passing:**
+
+```python
+# Fungsi utama meneruskan konteks JWT payload dan db connection
+def handle_cashier_menu(db_conn, jwt_payload):
+    branch_id = jwt_payload['branch_id']
+    user_id = jwt_payload['user_id']
+    
+    # Context (state) diteruskan sebagai argumen
+    transaction_result = process_order(db_conn, branch_id, user_id, order_items)
+    return render_receipt(transaction_result)
+```
+
+## 15. Non-Functional Requirements Coverage
+
+- **Performance**: Pemilihan driver *mysql-connector-python* yang dieksekusi fungsional ke MySQL 8.4 mampu mengakomodasi waktu komputasi optimal dengan latensi interaktif CLI < 150 ms per baris perintah interaktif layar.
+- **Maintainability**: Pola tata letak *layered architecture* memungkinkan lokalisasi pemeliharaan setiap modul. Penggunaan FP membantu meminimalisasi anomali pemeliharaan jangka panjang dan pelacakan kesalahan penelusuran berkat tidak adanya *state* objek pewarisan yang kompleks.
+- **Security**: Injeksi terpadu pengaman fungsional pustaka `bcrypt` dan `pyjwt`, arsitektur kerangka logika pelindung `is_deleted = 0`, serta rekonsiliasi pencegahan peretasan `SQL injection` dilakukan secara murni lewat injeksi parameter kueri SQL tuple di sisi pangkalan data.
+
+## 16. Glossary / Istilah
+
+- **FP (Functional Programming):** Paradigma pemrograman terstruktur yang menghindari efek samping eksternal, di mana program dirakit dengan penerapan fungsi matematis murni (menerima argumen input, menghasilkan keluaran baru).
+- **Immutable Data:** Struktur data wadah penampung nilai memori variabel yang tidak dapat diubah lagi keadaannya pasca dibentuk untuk pertama kalinya.
+- **Soft Delete:** Teknik mempertahankan arsip fisik pada memori dengan sekadar mengubah penandaan status menjadi atribut tidak relevan lagi secara logis.
+- **RBAC:** Skema pengendalian akses otoritas berbasis parameter pemisahan kewenangan identitas yang diekstrak dalam JWT.
+- **BOM (Bill of Materials):** Rincian bahan yang mutlak disyaratkan agar pencetakan satu unit produk selesai menjadi luaran produk akhir.
+
+## 17. Riwayat Versi
 
 | Versi | Tanggal | Diubah Oleh | Keterangan |
 |---|---|---|---|
-| 1.0.0 | 2026-05-15 | Senior Software Architect & Senior System Designer (AI) | Pembuatan struktur dasar System Architecture Document dengan mencakup arsitektur berlapis, implementasi mutlak FP murni, pola aliran integrasi transaksi, strategi Multi-Branch Ready, integrasi 5 modul inovasi operasional/keamanan, penempatan layer keamanan RBAC, standardisasi Error-Handling, dan matriks entitas MySQL. |
+| 1.0.0 | 2026-05-15 | Senior Software Architect & Senior System Designer (AI) | Pembuatan struktur dasar System Architecture Document dengan mencakup arsitektur berlapis, implementasi mutlak FP murni, pola aliran integrasi transaksi, strategi Multi-Branch Ready, integrasi modul inovasi, penempatan layer keamanan RBAC, dan matriks MySQL. |
+| 1.1.0 | 2026-05-15 | Senior Software Architect (AI) | Validasi menyeluruh: perbaikan bahasa profesional, pengisian data kosong, penambahan bagian yang hilang (Dependency Map, Constraint Teknis, NFR, Glossary), komparasi 5 inovasi, komparasi referensi 20 modul, serta peningkatan kelayakan dokumen sebagai referensi utama fase implementasi lanjutan. |
 
-## 14. Referensi Dokumen
+## 18. Referensi Dokumen
 
-- `docs/sdlc/01_planning/04_tech_stack_decision.md`
+- `docs/sdlc/narasi.txt`
 - `docs/sdlc/01_planning/01_project_charter.md`
+- `docs/sdlc/01_planning/04_tech_stack_decision.md`
+- `docs/sdlc/01_planning/05_innovation_proposal.md`
 - `docs/sdlc/02_analysis/02_software_requirements.md`
 - `docs/sdlc/02_analysis/06_access_control_matrix.md`
 - `docs/sdlc/03_design/01_database_schema.sql`
 - `docs/sdlc/03_design/02_erd_database.puml`
-- `docs/sdlc/01_planning/05_innovation_proposal.md`

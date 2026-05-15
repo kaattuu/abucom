@@ -21,7 +21,7 @@ sdlc/
 │   │
 │   ├── 01_database_schema.sql             [dokumen_utama]    status: [finish]
 │   ├── 02_erd_database.puml               [dokumen_utama]    status: [finish]
-│   ├── 03_system_architecture.md          [dokumen_utama]    status: [draft]
+│   ├── 03_system_architecture.md          [dokumen_utama]    status: [finish]
 │   ├── 04_cli_interaction_flow.puml       [dokumen_utama]    status: [check]
 │   ├── 05_bom_hpp_design.md               [dokumen_utama]    status: [check]
 │   └── 06_security_design.md              [dokumen_utama]    status: [check]
