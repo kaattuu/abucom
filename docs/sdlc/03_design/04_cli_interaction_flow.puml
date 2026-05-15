@@ -1,3 +1,492 @@
 @startuml
-' CLI Interaction Flow
+' ============================================
+' METADATA DIAGRAM
+' ============================================
+' Judul: CLI Interaction Flow - Sistem Manajemen Usaha Percetakan AbuCom
+' Versi: 1.0.0
+' Status: [finish]
+' Tanggal: 2026-05-15
+' Disusun Oleh: Senior UX Architect & Senior CLI Interaction Designer (AI)
+' ============================================
+
+skinparam defaultTextAlignment center
+skinparam ArrowColor Teal
+skinparam ActivityBackgroundColor LightCyan
+skinparam ActivityBorderColor DarkCyan
+
+|Pengguna|
+|Sistem|
+
+partition "1. Alur Autentikasi (Login) — F-01" {
+    |Sistem|
+    start
+    :Tampilkan banner "=== SISTEM ABUCOM ===";
+    :Prompt "Masukkan Username:";
+    |Pengguna|
+    :Input username;
+    |Sistem|
+    :Prompt "Masukkan Password:";
+    |Pengguna|
+    :Input password;
+    |Sistem|
+    :Verifikasi bcrypt terhadap hash di database;
+    if (Password cocok?) then (Tidak)
+        :Increment counter gagal login;
+        if (Gagal >= 5 kali?) then (Ya)
+            :Set is_locked = 1 pada akun;
+            :Tampilkan "Akun terkunci. Hubungi Pemilik.";
+            stop
+        else (Tidak)
+            :Tampilkan "Login gagal. Silakan coba lagi.";
+            :Kembali ke prompt username;
+        endif
+    else (Ya)
+        :Generate JWT (user_id, role, branch_id, exp 8 jam);
+        :Simpan token ke login_sessions;
+        :Catat audit trail "LOGIN";
+        :Clear screen;
+    endif
+}
+
+partition "2. Menu Utama CLI (Berdasarkan Role) — F-01" {
+    |Sistem|
+    :Ekstrak role dari JWT payload;
+    :Cek validitas JWT (belum expired);
+    if (role == Pemilik?) then (Ya)
+        :Render Menu Utama Pemilik:\n[1] Transaksi Kasir\n[2] Gudang & Stok\n[3] Job Tracking\n[4] Limbah Produksi\n[5] Absensi\n[6] PPOB & Jasa Keuangan\n[7] Data Pelanggan\n[8] BOM & HPP\n[9] SDM & Penggajian\n[10] Vendor & Supplier\n[11] Laporan Keuangan\n[12] Rekonsiliasi Kas\n[13] Data Finansial Sensitif\n[0] Logout;
+    else (Karyawan)
+        :Render Menu Utama Karyawan (RBAC filter):\n[1] Transaksi Kasir\n[2] Gudang & Stok\n[3] Job Tracking\n[4] Limbah Produksi\n[5] Absensi\n[6] PPOB & Jasa Keuangan\n[7] Data Pelanggan\n[0] Logout\n(Menu manajerial TIDAK di-render);
+    endif
+    repeat
+        |Sistem|
+        if (Idle >= 10 menit tanpa input?) then (Ya)
+            :Invalidasi JWT & hapus sesi login_sessions;
+            :Tampilkan "Sesi berakhir karena tidak ada aktivitas.";
+            stop
+        else (Tidak)
+        endif
+        :Cek JWT masih valid;
+        :Prompt "Pilih menu:";
+        |Pengguna|
+        :Input nomor menu;
+        |Sistem|
+        if (Input angka valid?) then (Tidak)
+            :Tampilkan "Pilihan tidak valid. Masukkan angka menu yang tersedia.";
+        else (Ya)
+            if (Menu == 0 Logout?) then (Ya)
+                :Arahkan ke alur Logout (Partition 11);
+            elseif (Menu 1-7 operasional?) then (Ya)
+                :Clear screen & masuk modul terpilih (F-02 s.d F-08);
+                :Selesai operasi modul;
+                :Kembali ke Menu Utama;
+            elseif (Menu 8-13 manajerial?) then (Ya)
+                if (role == Pemilik?) then (Ya)
+                    :Clear screen & masuk modul manajerial (BOM, SDM, Vendor, F-09);
+                    :Selesai operasi modul;
+                    :Kembali ke Menu Utama;
+                else (Karyawan)
+                    :Tampilkan "Akses ditolak.";
+                endif
+            else (Tidak dikenal)
+                :Tampilkan "Nomor menu tidak tersedia.";
+            endif
+        endif
+    repeat while (Kembali ke Menu Utama?) is (Ya)
+}
+
+partition "3. Alur Interaksi Transaksi Kasir (F-02)" {
+    |Sistem|
+    :Clear screen — modul Transaksi Kasir;
+    :Tampilkan Sub-Menu:\n[1] Buat Transaksi Baru\n[2] Proses Pembatalan\n[3] Proses Retur\n[0] Kembali ke Menu Utama;
+    |Pengguna|
+    :Pilih sub-menu;
+    |Sistem|
+    if (Pilihan sub-menu?) then (Buat Transaksi)
+        :Prompt "Pilih Tipe Layanan:\n[1] Percetakan [2] ATK [3] PPOB\n[4] Jasa Keuangan [5] Jasa Teknis";
+        |Pengguna|
+        :Input tipe layanan;
+        |Sistem|
+        :Prompt "Masukkan ID Produk/Layanan:";
+        |Pengguna|
+        :Input ID produk;
+        |Sistem|
+        if (ID produk valid?) then (Tidak)
+            :Tampilkan "ID produk tidak ditemukan.";
+        else (Ya)
+            :Prompt "Masukkan Kuantitas:";
+            |Pengguna|
+            :Input qty;
+            |Sistem|
+            if (qty valid?) then (Tidak)
+                :Tampilkan "Kuantitas tidak valid.";
+            else (Ya)
+                if (qty >= 50 ATAU pelanggan mitra >= 3 bulan?) then (Ya)
+                    :Terapkan harga grosir / harga mitra;
+                else (Tidak)
+                    :Terapkan harga retail;
+                endif
+                :Tampilkan subtotal di CLI;
+                if (Tipe layanan == Percetakan?) then (Ya)
+                    :Prompt "Status Pembayaran:\n[1] DP [2] Lunas";
+                    |Pengguna|
+                    :Pilih DP atau Lunas;
+                    |Sistem|
+                    if (DP?) then (Ya)
+                        :Prompt "Masukkan nominal DP (min 50%):";
+                        |Pengguna|
+                        :Input nominal DP;
+                    endif
+                    :Hitung HPP dari BOM;
+                    :Potong stok bahan baku;
+                    :Catat transaksi & audit trail;
+                    :Commit database;
+                    :Tampilkan Struk Digital (item, harga, DP/sisa, status "Antri");
+                else (ATK/PPOB/Jasa)
+                    :Proses pembayaran Lunas;
+                    if (PPOB / Jasa Keuangan?) then (Ya)
+                        if (Nominal > Rp 5.000.000?) then (Ya)
+                            :Prompt "Masukkan PIN Pemilik:";
+                            |Pengguna|
+                            :Input PIN;
+                            |Sistem|
+                            if (PIN valid (bcrypt)?) then (Tidak)
+                                :Tampilkan "PIN salah. Transaksi dibatalkan.";
+                            else (Ya)
+                                :Proses mutasi saldo PPOB;
+                            endif
+                        else (Tidak)
+                            :Proses mutasi saldo PPOB;
+                        endif
+                        if (Sisa saldo < Rp 150.000?) then (Ya)
+                            :Tampilkan peringatan saldo minimum;
+                        endif
+                    elseif (ATK?) then (Ya)
+                        :Hitung HPP & potong stok retail;
+                    else (Jasa Teknis)
+                        :Catat pendapatan jasa teknis;
+                    endif
+                    :Catat transaksi & audit trail;
+                    :Commit database;
+                    :Tampilkan Struk Digital;
+                endif
+            endif
+        endif
+    elseif (Pembatalan) then
+        :Prompt "Masukkan ID Transaksi:";
+        |Pengguna|
+        :Input ID transaksi;
+        |Sistem|
+        :Cek status pesanan;
+        if (Status >= "Proses Desain"?) then (Ya)
+            :Tampilkan "DP hangus — produksi sudah berjalan.";
+        else (Tidak)
+            :Kembalikan DP ke pelanggan;
+            :Update status = Dibatalkan;
+            :Tampilkan konfirmasi pembatalan berhasil;
+        endif
+    elseif (Retur) then
+        :Prompt "Masukkan ID Transaksi:";
+        |Pengguna|
+        :Input ID transaksi;
+        |Sistem|
+        if (Masih dalam 1x24 jam & kelalaian internal?) then (Ya)
+            :Setujui retur 100%;
+            :Tampilkan konfirmasi retur disetujui;
+        else (Tidak)
+            :Tampilkan "Retur ditolak — batas waktu atau alasan tidak memenuhi syarat.";
+        endif
+    else (Kembali)
+        :Kembali ke Menu Utama;
+    endif
+}
+
+partition "4. Alur Interaksi Gudang & BOM (F-03)" {
+    |Sistem|
+    :Clear screen — modul Gudang & Stok;
+    :Tampilkan Sub-Menu:\n[1] Lihat Stok\n[2] Update Stok\n[3] Kelola BOM (Pemilik)\n[4] Hitung HPP\n[0] Kembali;
+    |Pengguna|
+    :Pilih sub-menu;
+    |Sistem|
+    if (Pilihan?) then (Lihat Stok)
+        :Query materials (is_deleted=0);
+        :Tampilkan Tabel ASCII Stok;
+    elseif (Update Stok) then
+        :Prompt "Masukkan ID Bahan:";
+        |Pengguna|
+        :Input ID bahan;
+        |Sistem|
+        :Prompt "Masukkan jumlah stok baru:";
+        |Pengguna|
+        :Input qty;
+        |Sistem|
+        :Update stok & audit trail;
+        :Tampilkan konfirmasi + sisa stok;
+    elseif (Kelola BOM) then
+        if (role == Pemilik?) then (Ya)
+            :Prompt "Masukkan ID Produk BOM:";
+            |Pengguna|
+            :Input ID produk;
+            |Sistem|
+            :Prompt "Masukkan besaran pemakaian per bahan:";
+            |Pengguna|
+            :Input komposisi BOM;
+            |Sistem|
+            :Simpan BOM & tampilkan konfirmasi;
+        else (Karyawan)
+            :Tampilkan "Akses ditolak — modul BOM khusus Pemilik.";
+        endif
+    elseif (Hitung HPP) then
+        :Prompt "Masukkan ID Produk & besaran produksi:";
+        |Pengguna|
+        :Input parameter;
+        |Sistem|
+        :Kalkulasi HPP dari BOM;
+        :Tampilkan nilai HPP & sisa stok bahan;
+    else (Kembali)
+        :Kembali ke Menu Utama;
+    endif
+}
+
+partition "5. Alur Interaksi Job Tracking (F-04)" {
+    |Sistem|
+    :Clear screen — modul Job Tracking;
+    :Tampilkan Sub-Menu:\n[1] Lihat Daftar Pesanan\n[2] Update Status Pesanan\n[3] Catat Arsip Desain\n[0] Kembali;
+    |Pengguna|
+    :Pilih sub-menu;
+    |Sistem|
+    if (Pilihan?) then (Lihat)
+        :Tampilkan tabel ringkasan status pesanan;
+    elseif (Update Status) then
+        :Prompt "Masukkan ID Transaksi:";
+        |Pengguna|
+        :Input ID transaksi;
+        |Sistem|
+        :Prompt "Status baru:\n[1] Antri [2] Proses Desain\n[3] Produksi [4] Selesai [5] Diambil";
+        |Pengguna|
+        :Pilih status;
+        |Sistem|
+        :Update orders_job_tracking;
+        :Tampilkan ringkasan status terbaru;
+    elseif (Arsip Desain) then
+        :Prompt "Masukkan ID Transaksi:";
+        |Pengguna|
+        :Input ID transaksi;
+        |Sistem|
+        :Prompt "Masukkan path arsip desain:";
+        |Pengguna|
+        :Input path file;
+        |Sistem|
+        :Generate nama file standar\n[TGL]_[ORDER]_[PELANGGAN]_[ITEM];
+        :Simpan referensi path & konfirmasi;
+    else (Kembali)
+        :Kembali ke Menu Utama;
+    endif
+}
+
+partition "6. Alur Interaksi Limbah Produksi (F-05)" {
+    |Sistem|
+    :Clear screen — modul Limbah Produksi;
+    :Prompt "Masukkan ID Bahan Baku:";
+    |Pengguna|
+    :Input ID bahan;
+    |Sistem|
+    :Prompt "Masukkan besaran pemakaian (volume/dimensi):";
+    |Pengguna|
+    :Input besaran;
+    |Sistem|
+    :Prompt "Masukkan alasan pembuangan:";
+    |Pengguna|
+    :Input alasan;
+    |Sistem|
+    :Konfirmasi pencatatan limbah;
+    :Kurangi stok & catat production_waste;
+    :Tampilkan tabel sisa stok gudang;
+    :Prompt "[0] Kembali ke Menu Utama";
+    |Pengguna|
+    :Pilih kembali;
+}
+
+partition "7. Alur Interaksi SDM & Penggajian (F-06)" {
+    |Sistem|
+    :Clear screen — modul SDM;
+    if (role == Pemilik?) then (Ya)
+        :Tampilkan Sub-Menu:\n[1] Absensi\n[2] Kelola Kasbon\n[3] Trigger Payroll\n[4] Lihat Slip Gaji Karyawan\n[0] Kembali;
+    else (Karyawan)
+        :Tampilkan Sub-Menu:\n[1] Absensi (Clock In/Out)\n[2] Lihat Slip Gaji Saya\n[0] Kembali;
+    endif
+    |Pengguna|
+    :Pilih sub-menu;
+    |Sistem|
+    if (Pilihan?) then (Absensi)
+        :Prompt "Pilih:\n[1] Clock In [2] Clock Out";
+        |Pengguna|
+        :Input pilihan;
+        |Sistem|
+        :Catat employee_attendance;
+        :Tampilkan konfirmasi absensi;
+    elseif (Kasbon Pemilik) then
+        :Prompt "Masukkan ID Karyawan & nominal kasbon:";
+        |Pengguna|
+        :Input data kasbon;
+        |Sistem|
+        :Simpan employee_loans & konfirmasi;
+    elseif (Payroll Pemilik) then
+        :Hitung pendapatan bulan berjalan;
+        if (Pendapatan >= Rp 15.000.000?) then (Ya)
+            :Gaji pokok = Rp 3.000.000;
+        else (Tidak)
+            :Gaji = 15% pendapatan bersih;
+        endif
+        :Akumulasi poin insentif;
+        :Potong kasbon aktif;
+        :Render Slip Gaji ASCII di CLI;
+    elseif (Slip Gaji) then
+        :Tampilkan slip gaji (milik sendiri / per ID karyawan);
+    else (Kembali)
+        :Kembali ke Menu Utama;
+    endif
+}
+
+partition "8. Alur Interaksi PPOB & Jasa Keuangan (F-07)" {
+    |Sistem|
+    :Clear screen — modul PPOB;
+    :Prompt "Pilih jenis:\n[1] Pulsa [2] Token [3] Mutasi Bank";
+    |Pengguna|
+    :Input jenis transaksi;
+    |Sistem|
+    :Prompt "Masukkan nominal:";
+    |Pengguna|
+    :Input nominal;
+    |Sistem|
+    if (Nominal > Rp 5.000.000?) then (Ya)
+        :Prompt "Masukkan PIN Pemilik:";
+        |Pengguna|
+        :Input PIN;
+        |Sistem|
+        if (PIN valid?) then (Tidak)
+            :Tampilkan "PIN salah. Transaksi dibatalkan.";
+            stop
+        endif
+    endif
+    :Prompt "Masukkan ID Platform (Mandiri/Dana/dll):";
+    |Pengguna|
+    :Input ID platform;
+    |Sistem|
+    :Validasi saldo & proses mutasi;
+    if (Saldo < Rp 150.000?) then (Ya)
+        :Tampilkan "PERINGATAN: Saldo [Akun] di bawah Rp 150.000.\nDeposit minimal Rp 500.000 segera.";
+    endif
+    :Tampilkan riwayat transaksi di CLI;
+    :Prompt "[0] Kembali ke Menu Utama";
+    |Pengguna|
+    :Pilih kembali;
+}
+
+partition "9. Alur Interaksi CRM (F-08)" {
+    |Sistem|
+    :Clear screen — modul CRM;
+    if (role == Pemilik?) then (Ya)
+        :Tampilkan Sub-Menu:\n[1] Data Pelanggan\n[2] Data Vendor/Supplier\n[0] Kembali;
+    else (Karyawan)
+        :Tampilkan Sub-Menu:\n[1] Data Pelanggan\n[0] Kembali;
+    endif
+    |Pengguna|
+    :Pilih sub-menu;
+    |Sistem|
+    if (Pilihan?) then (Pelanggan)
+        :Prompt "Nama, Kontak WA, data pelanggan:";
+        |Pengguna|
+        :Input data pelanggan;
+        |Sistem|
+        :Simpan ke customers & tampilkan "Data entitas berhasil direkam";
+    elseif (Vendor Pemilik) then
+        :Prompt "Nama Supplier, Kontak, Harga Penawaran:";
+        |Pengguna|
+        :Input data vendor;
+        |Sistem|
+        :Simpan ke vendors & tampilkan konfirmasi;
+    else (Kembali)
+        :Kembali ke Menu Utama;
+    endif
+}
+
+partition "10. Alur Interaksi Pelaporan (F-09 — Khusus Pemilik)" {
+    |Sistem|
+    if (role == Pemilik?) then (Ya)
+        :Clear screen — modul Pelaporan;
+        :Tampilkan Sub-Menu:\n[1] Laporan Laba Rugi\n[2] Rekonsiliasi Kas\n[3] Data Finansial Sensitif\n[0] Kembali;
+        |Pengguna|
+        :Pilih jenis laporan;
+        |Sistem|
+        :Prompt "Masukkan tanggal awal (DD-MM-YYYY):";
+        |Pengguna|
+        :Input tanggal awal;
+        |Sistem|
+        if (Format tanggal valid?) then (Tidak)
+            :Tampilkan "Format tanggal tidak valid.";
+        else (Ya)
+            :Prompt "Masukkan tanggal akhir (DD-MM-YYYY):";
+            |Pengguna|
+            :Input tanggal akhir;
+            |Sistem|
+            :Agregasi data (reduce/filter) per jenis laporan;
+            :Tampilkan Tabel ASCII (pendapatan, rekonsiliasi, margin);
+        endif
+    else (Karyawan)
+        :Tampilkan "Akses ditolak — modul pelaporan khusus Pemilik.";
+    endif
+    :Prompt "[0] Kembali ke Menu Utama";
+    |Pengguna|
+    :Pilih kembali;
+}
+
+partition "11. Logout Manual & Idle Timeout" {
+    |Pengguna|
+    if (Logout manual menu 0?) then (Ya)
+        |Sistem|
+        :Hapus sesi dari login_sessions;
+        :Catat audit trail "LOGOUT";
+        :Tampilkan "Anda telah keluar.";
+        :Kembali ke prompt login (Partition 1);
+    endif
+    |Sistem|
+    if (Deteksi idle >= 10 menit?) then (Ya)
+        :Invalidasi JWT;
+        :Hapus sesi login_sessions;
+        :Tampilkan "Sesi berakhir karena tidak ada aktivitas.";
+        :Kembali ke prompt login (Partition 1);
+    endif
+    stop
+}
+
+' ============================================
+' TABEL MAPPING ALUR INTERAKSI CLI
+' ============================================
+' | Alur Interaksi CLI              | Modul SRS | Use Case         |
+' |---------------------------------|-----------|------------------|
+' | Login & Brute-force             | F-01      | UC_Login         |
+' | Menu Utama & RBAC               | F-01      | UC_Login         |
+' | Transaksi Kasir (buat/batal/retur)| F-02    | UC_Transaksi     |
+' | Pembayaran DP/Lunas             | F-02      | UC_Bayar         |
+' | Gudang & Stok / BOM / HPP       | F-03      | UC_Inventaris    |
+' | Kelola BOM (Pemilik)            | F-03      | UC_BOM           |
+' | Job Tracking & Arsip Desain     | F-04      | UC_StatusPesanan |
+' | Catat Arsip Desain              | F-04      | UC_Arsip         |
+' | Limbah Produksi                 | F-05      | UC_Limbah        |
+' | Absensi                         | F-06      | UC_Absen         |
+' | Kasbon & Payroll                | F-06      | UC_Kasbon, UC_Gaji|
+' | PPOB & Jasa Keuangan            | F-07      | UC_PPOB, UC_Saldo|
+' | CRM Pelanggan / Vendor          | F-08      | UC_Pelanggan, UC_Vendor |
+' | Laporan & Rekonsiliasi          | F-09      | UC_Laporan, UC_Rekonsiliasi, UC_Sensitif |
+' | Logout & Idle Timeout           | F-01      | UC_Login         |
+' ============================================
+
+' ==========================================
+' REFERENSI DOKUMEN:
+' 1. docs/sdlc/03_design/03_system_architecture.md
+' 2. docs/sdlc/02_analysis/02_software_requirements.md
+' 3. docs/sdlc/02_analysis/03_use_case_diagram.puml
+' 4. docs/sdlc/02_analysis/06_access_control_matrix.md
+' 5. docs/sdlc/02_analysis/04_workflow_diagram.puml
+' ==========================================
 @enduml
