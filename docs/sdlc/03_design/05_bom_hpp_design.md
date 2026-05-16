@@ -5,7 +5,7 @@
 | Atribut | Detail |
 | :--- | :--- |
 | **Versi** | 1.0.0 |
-| **Status** | [create_file] |
+| **Status** | [draft] |
 | **Tanggal** | 2026-05-16 |
 | **Disusun Oleh** | Senior Manufacturing Engineer & Senior Cost Accounting Architect (AI) |
 
@@ -45,29 +45,29 @@ Berikut adalah daftar contoh komposisi bahan baku untuk minimal 6 produk perceta
 
 | Nama Produk | Bahan Penyusun (Material) | Satuan (UoM) | Kebutuhan (Req Qty) | Harga Modal / Satuan (Cost/Unit) |
 | :--- | :--- | :--- | :--- | :--- |
-| **Stempel Flash** | Gagang Stempel | pcs | 1.0000 | `[PERLU DIISI MANUAL]` |
-| | Karet Flash | cm² | 15.0000 | `[PERLU DIISI MANUAL]` |
-| | Tinta Stempel | ml | 2.5000 | `[PERLU DIISI MANUAL]` |
-| | Kertas Buffalo (Ganjal) | cm² | 10.0000 | `[PERLU DIISI MANUAL]` |
-| **Cetak Foto (4R)** | Kertas Foto Glossy | cm² | 152.0000 | `[PERLU DIISI MANUAL]` |
-| | Tinta Printer (CMYK) | ml | 1.2000 | `[PERLU DIISI MANUAL]` |
-| | Plastik Foto | pcs | 1.0000 | `[PERLU DIISI MANUAL]` |
-| **Buku Yasin** | Isi Buku Yasin (Blangko) | pcs | 1.0000 | `[PERLU DIISI MANUAL]` |
-| | Cover Yasin (Hardcover) | pcs | 1.0000 | `[PERLU DIISI MANUAL]` |
-| | Lem Panas | gram | 5.0000 | `[PERLU DIISI MANUAL]` |
-| | Pita Pembatas | cm | 20.0000 | `[PERLU DIISI MANUAL]` |
-| **Undangan Pernikahan** | Kertas BC / Tik | lembar | 1.0000 | `[PERLU DIISI MANUAL]` |
-| | Tinta Printer | ml | 0.8000 | `[PERLU DIISI MANUAL]` |
-| | Plastik OPP | pcs | 1.0000 | `[PERLU DIISI MANUAL]` |
-| | Label Nama (103) | pcs | 0.0833 | `[PERLU DIISI MANUAL]` |
-| **Cetak Baliho** | Bahan Flexi 280gr | m² | 1.0000 | `[PERLU DIISI MANUAL]` |
-| | Tinta Solvent | ml | 15.0000 | `[PERLU DIISI MANUAL]` |
-| | Mata Ayam (Mata Ikan) | pcs | 4.0000 | `[PERLU DIISI MANUAL]` |
-| **Cetak Stiker A3+** | Kertas Stiker Bontax | lembar | 1.0000 | `[PERLU DIISI MANUAL]` |
-| | Tinta Laser / Toner | ml | 0.5000 | `[PERLU DIISI MANUAL]` |
-| **Nama Dada (Name Tag)** | Akrilik / PVC | cm² | 16.0000 | `[PERLU DIISI MANUAL]` |
-| | Resin (A+B) | ml | 5.0000 | `[PERLU DIISI MANUAL]` |
-| | Peniti / Magnet | pcs | 1.0000 | `[PERLU DIISI MANUAL]` |
+| **Stempel Flash** | Gagang Stempel | pcs | 1.0000 | `[PERLU DIISI MANUAL: harga beli aktual dari supplier]` |
+| | Karet Flash | cm² | 15.0000 | `[PERLU DIISI MANUAL: harga beli aktual dari supplier]` |
+| | Tinta Stempel | ml | 2.5000 | `[PERLU DIISI MANUAL: harga beli aktual dari supplier]` |
+| | Kertas Buffalo (Ganjal) | cm² | 10.0000 | `[PERLU DIISI MANUAL: harga beli aktual dari supplier]` |
+| **Cetak Foto (4R)** | Kertas Foto Glossy | cm² | 152.0000 | `[PERLU DIISI MANUAL: harga beli aktual dari supplier]` |
+| | Tinta Printer (CMYK) | ml | 1.2000 | `[PERLU DIISI MANUAL: harga beli aktual dari supplier]` |
+| | Plastik Foto | pcs | 1.0000 | `[PERLU DIISI MANUAL: harga beli aktual dari supplier]` |
+| **Buku Yasin** | Isi Buku Yasin (Blangko) | pcs | 1.0000 | `[PERLU DIISI MANUAL: harga beli aktual dari supplier]` |
+| | Cover Yasin (Hardcover) | pcs | 1.0000 | `[PERLU DIISI MANUAL: harga beli aktual dari supplier]` |
+| | Lem Panas | gram | 5.0000 | `[PERLU DIISI MANUAL: harga beli aktual dari supplier]` |
+| | Pita Pembatas | cm | 20.0000 | `[PERLU DIISI MANUAL: harga beli aktual dari supplier]` |
+| **Undangan Pernikahan** | Kertas BC / Tik | lembar | 1.0000 | `[PERLU DIISI MANUAL: harga beli aktual dari supplier]` |
+| | Tinta Printer | ml | 0.8000 | `[PERLU DIISI MANUAL: harga beli aktual dari supplier]` |
+| | Plastik OPP | pcs | 1.0000 | `[PERLU DIISI MANUAL: harga beli aktual dari supplier]` |
+| | Label Nama (103) | pcs | 0.0833 | `[PERLU DIISI MANUAL: harga beli aktual dari supplier]` |
+| **Cetak Baliho** | Bahan Flexi 280gr | m² | 1.0000 | `[PERLU DIISI MANUAL: harga beli aktual dari supplier]` |
+| | Tinta Solvent | ml | 15.0000 | `[PERLU DIISI MANUAL: harga beli aktual dari supplier]` |
+| | Mata Ayam (Mata Ikan) | pcs | 4.0000 | `[PERLU DIISI MANUAL: harga beli aktual dari supplier]` |
+| **Cetak Stiker A3+** | Kertas Stiker Bontax | lembar | 1.0000 | `[PERLU DIISI MANUAL: harga beli aktual dari supplier]` |
+| | Tinta Laser / Toner | ml | 0.5000 | `[PERLU DIISI MANUAL: harga beli aktual dari supplier]` |
+| **Nama Dada (Name Tag)** | Akrilik / PVC | cm² | 16.0000 | `[PERLU DIISI MANUAL: harga beli aktual dari supplier]` |
+| | Resin (A+B) | ml | 5.0000 | `[PERLU DIISI MANUAL: harga beli aktual dari supplier]` |
+| | Peniti / Magnet | pcs | 1.0000 | `[PERLU DIISI MANUAL: harga beli aktual dari supplier]` |
 
 ---
 
