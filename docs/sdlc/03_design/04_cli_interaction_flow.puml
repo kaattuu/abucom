@@ -3,9 +3,9 @@
 ' METADATA DIAGRAM
 ' ============================================
 ' Judul: CLI Interaction Flow - Sistem Manajemen Usaha Percetakan AbuCom
-' Versi: 1.0.0
-' Status: [draft]
-' Tanggal: 2026-05-15
+' Versi: 1.1.0
+' Status: [finish]
+' Tanggal: 2026-05-16
 ' Disusun Oleh: Senior UX Architect & Senior CLI Interaction Designer (AI)
 ' ============================================
 
@@ -62,7 +62,7 @@ partition "2. Menu Utama CLI (Berdasarkan Role) — F-01" {
         if (Idle >= 10 menit tanpa input?) then (Ya)
             :Invalidasi JWT & hapus sesi login_sessions;
             :Tampilkan "Sesi berakhir karena tidak ada aktivitas.";
-            stop
+            :Kembali ke prompt login (Partition 1);
         else (Tidak)
         endif
         :Cek JWT masih valid;
@@ -135,6 +135,7 @@ partition "3. Alur Interaksi Transaksi Kasir (F-02)" {
                         :Prompt "Masukkan nominal DP (min 50%):";
                         |Pengguna|
                         :Input nominal DP;
+                        |Sistem|
                     endif
                     :Hitung HPP dari BOM;
                     :Potong stok bahan baku;
@@ -158,7 +159,7 @@ partition "3. Alur Interaksi Transaksi Kasir (F-02)" {
                             :Proses mutasi saldo PPOB;
                         endif
                         if (Sisa saldo < Rp 150.000?) then (Ya)
-                            :Tampilkan peringatan saldo minimum;
+                            :Tampilkan "PERINGATAN: Saldo [Akun] di bawah Rp 150.000.\nDeposit minimal Rp 500.000 segera.";
                         endif
                     elseif (ATK?) then (Ya)
                         :Hitung HPP & potong stok retail;
@@ -171,7 +172,7 @@ partition "3. Alur Interaksi Transaksi Kasir (F-02)" {
                 endif
             endif
         endif
-    elseif (Pembatalan) then
+    elseif (Pilihan sub-menu?) then (Pembatalan)
         :Prompt "Masukkan ID Transaksi:";
         |Pengguna|
         :Input ID transaksi;
@@ -184,7 +185,7 @@ partition "3. Alur Interaksi Transaksi Kasir (F-02)" {
             :Update status = Dibatalkan;
             :Tampilkan konfirmasi pembatalan berhasil;
         endif
-    elseif (Retur) then
+    elseif (Pilihan sub-menu?) then (Retur)
         :Prompt "Masukkan ID Transaksi:";
         |Pengguna|
         :Input ID transaksi;
@@ -210,7 +211,7 @@ partition "4. Alur Interaksi Gudang & BOM (F-03)" {
     if (Pilihan?) then (Lihat Stok)
         :Query materials (is_deleted=0);
         :Tampilkan Tabel ASCII Stok;
-    elseif (Update Stok) then
+    elseif (Pilihan?) then (Update Stok)
         :Prompt "Masukkan ID Bahan:";
         |Pengguna|
         :Input ID bahan;
@@ -221,7 +222,7 @@ partition "4. Alur Interaksi Gudang & BOM (F-03)" {
         |Sistem|
         :Update stok & audit trail;
         :Tampilkan konfirmasi + sisa stok;
-    elseif (Kelola BOM) then
+    elseif (Pilihan?) then (Kelola BOM)
         if (role == Pemilik?) then (Ya)
             :Prompt "Masukkan ID Produk BOM:";
             |Pengguna|
@@ -235,7 +236,7 @@ partition "4. Alur Interaksi Gudang & BOM (F-03)" {
         else (Karyawan)
             :Tampilkan "Akses ditolak — modul BOM khusus Pemilik.";
         endif
-    elseif (Hitung HPP) then
+    elseif (Pilihan?) then (Hitung HPP)
         :Prompt "Masukkan ID Produk & besaran produksi:";
         |Pengguna|
         :Input parameter;
@@ -256,7 +257,7 @@ partition "5. Alur Interaksi Job Tracking (F-04)" {
     |Sistem|
     if (Pilihan?) then (Lihat)
         :Tampilkan tabel ringkasan status pesanan;
-    elseif (Update Status) then
+    elseif (Pilihan?) then (Update Status)
         :Prompt "Masukkan ID Transaksi:";
         |Pengguna|
         :Input ID transaksi;
@@ -267,7 +268,7 @@ partition "5. Alur Interaksi Job Tracking (F-04)" {
         |Sistem|
         :Update orders_job_tracking;
         :Tampilkan ringkasan status terbaru;
-    elseif (Arsip Desain) then
+    elseif (Pilihan?) then (Arsip Desain)
         :Prompt "Masukkan ID Transaksi:";
         |Pengguna|
         :Input ID transaksi;
@@ -324,13 +325,13 @@ partition "7. Alur Interaksi SDM & Penggajian (F-06)" {
         |Sistem|
         :Catat employee_attendance;
         :Tampilkan konfirmasi absensi;
-    elseif (Kasbon Pemilik) then
+    elseif (Pilihan?) then (Kasbon Pemilik)
         :Prompt "Masukkan ID Karyawan & nominal kasbon:";
         |Pengguna|
         :Input data kasbon;
         |Sistem|
         :Simpan employee_loans & konfirmasi;
-    elseif (Payroll Pemilik) then
+    elseif (Pilihan?) then (Payroll Pemilik)
         :Hitung pendapatan bulan berjalan;
         if (Pendapatan >= Rp 15.000.000?) then (Ya)
             :Gaji pokok = Rp 3.000.000;
@@ -340,7 +341,7 @@ partition "7. Alur Interaksi SDM & Penggajian (F-06)" {
         :Akumulasi poin insentif;
         :Potong kasbon aktif;
         :Render Slip Gaji ASCII di CLI;
-    elseif (Slip Gaji) then
+    elseif (Pilihan?) then (Slip Gaji)
         :Tampilkan slip gaji (milik sendiri / per ID karyawan);
     else (Kembali)
         :Kembali ke Menu Utama;
@@ -394,13 +395,13 @@ partition "9. Alur Interaksi CRM (F-08)" {
     :Pilih sub-menu;
     |Sistem|
     if (Pilihan?) then (Pelanggan)
-        :Prompt "Nama, Kontak WA, data pelanggan:";
+        :Prompt "Masukkan Nama Lengkap dan Kontak WA Pelanggan:";
         |Pengguna|
         :Input data pelanggan;
         |Sistem|
         :Simpan ke customers & tampilkan "Data entitas berhasil direkam";
-    elseif (Vendor Pemilik) then
-        :Prompt "Nama Supplier, Kontak, Harga Penawaran:";
+    elseif (Pilihan?) then (Vendor Pemilik)
+        :Prompt "Masukkan Nama Supplier, Kontak, dan Harga Penawaran:";
         |Pengguna|
         :Input data vendor;
         |Sistem|
