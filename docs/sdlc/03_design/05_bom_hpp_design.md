@@ -5,7 +5,7 @@
 | Atribut | Detail |
 | :--- | :--- |
 | **Versi** | 1.0.0 |
-| **Status** | [finish] |
+| **Status** | [create_file] |
 | **Tanggal** | 2026-05-16 |
 | **Disusun Oleh** | Senior Manufacturing Engineer & Senior Cost Accounting Architect (AI) |
 
