@@ -24,7 +24,7 @@ sdlc/
 │   ├── 03_system_architecture.md       [dokumen_utama] status: [finish]
 │   ├── 04_cli_interaction_flow.puml    [dokumen_utama] status: [finish]
 │   ├── 05_bom_hpp_design.md            [dokumen_utama] status: [finish]
-│   └── 06_security_design.md           [dokumen_utama] status: [create_file]
+│   └── 06_security_design.md           [dokumen_utama] status: [draft]
 │
 ├── 04_implementation/
 │   │
