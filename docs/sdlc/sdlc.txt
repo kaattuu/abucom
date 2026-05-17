@@ -28,7 +28,7 @@ sdlc/
 │
 ├── 04_implementation/
 │   │
-│   ├── 01_coding_standard.md           [dokumen_utama] status: [check]
+│   ├── 01_coding_standard.md           [dokumen_utama] status: [create_file]
 │   ├── 02_environment_setup.md         [dokumen_utama] status: [check]
 │   ├── 03_module_structure.md          [dokumen_utama] status: [check]
 │   └── 04_git_workflow.md              [dokumen_utama] status: [check]
