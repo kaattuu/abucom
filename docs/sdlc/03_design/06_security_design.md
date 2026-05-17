@@ -4,14 +4,16 @@
 
 | Atribut | Detail |
 |---|---|
-| **Versi** | 1.0.0 |
-| **Status** | [draft] |
-| **Tanggal Dibuat** | 2026-05-17 |
-| **Disusun Oleh** | Senior Information Security Architect & Senior Cybersecurity Engineer (AI) |
+| **Versi** | 1.1.0 |
+| **Status** | [finish] |
+| **Tanggal Diperbarui** | 2026-05-17 |
+| **Disusun Oleh** | Senior Information Security Architect & Principal Technical Writer (AI) |
 
 ## 2. Pendahuluan & Tujuan
 
-Dokumen Security Design ini disusun sebagai panduan teknis utama yang mendefinisikan secara lengkap arsitektur keamanan untuk Sistem Manajemen Usaha Percetakan "AbuCom". Ruang lingkup dokumen ini mencakup mekanisme autentikasi dan otorisasi, penegakan Role-Based Access Control (RBAC), perlindungan data sensitif, audit trail, serta ketahanan sistem terhadap serangan. Arsitektur keamanan ini bertindak sebagai Security Layer terpusat yang melindungi modul autentikasi, transaksi kasir, gudang, pelaporan keuangan, dan SDM, memastikan bahwa operasional bisnis berjalan dengan integritas data dan kerahasiaan yang tinggi. Desain ini merujuk pada standar industri seperti NIST Cybersecurity Framework dan ISO/IEC 27002:2022.
+Dokumen Security Design ini disusun sebagai panduan teknis utama yang mendefinisikan secara lengkap arsitektur keamanan untuk Sistem Manajemen Usaha Percetakan "AbuCom". Ruang lingkup dokumen ini mencakup mekanisme autentikasi dan otorisasi, penegakan Role-Based Access Control (RBAC), perlindungan data sensitif, audit trail, serta ketahanan sistem terhadap serangan. Arsitektur keamanan ini bertindak sebagai Security Layer terpusat yang melindungi modul autentikasi, transaksi kasir, gudang, pelaporan keuangan, dan SDM, memastikan bahwa operasional bisnis berjalan dengan integritas data dan kerahasiaan yang tinggi.
+
+Berdasarkan konteks bisnis (`narasi.txt`), sistem ini secara khusus wajib melindungi data sensitif seperti pinjaman bank (BRI & Mandiri) dan tabungan pemilik agar tidak memicu gesekan internal. Sistem juga mewajibkan keberadaan rekam jejak (audit trail) sebagai fondasi forensik bisnis untuk mencegah kecurangan. Desain ini merujuk pada standar industri seperti NIST Cybersecurity Framework dan ISO/IEC 27002:2022.
 
 ## 3. Prinsip Keamanan Fundamental
 
@@ -29,9 +31,9 @@ Mekanisme autentikasi menggunakan JSON Web Token (JWT) yang *stateless* dan murn
 
 ### Alur Login CLI
 1. **Input CLI:** Pengguna memasukkan `username` dan `password` di prompt CLI.
-2. **Hash & Verifikasi:** Sistem mengambil hash kata sandi dari database. `bcrypt.checkpw()` dipanggil secara *stateless* untuk memverifikasi kecocokan sandi dengan konfigurasi keamanan 12 *salt rounds*.
-3. **Generate JWT:** Jika valid, `pyjwt` men-generate token dengan algoritma **HS256** menggunakan `secret_key` yang dimuat dari `.env`.
-4. **Struktur Payload:** Token memuat atribut: `user_id`, `role`, `branch_id`, dan `exp` (berlaku 8 jam).
+2. **Hash & Verifikasi:** Sistem mengambil hash kata sandi dari database. Fungsi `bcrypt.checkpw()` dari *library* `bcrypt 4.3.0` dipanggil secara *stateless* untuk memverifikasi kecocokan sandi dengan konfigurasi keamanan eksplisit `rounds=12`.
+3. **Generate JWT:** Jika valid, *library* `pyjwt 2.10.1` men-generate token dengan algoritma **HS256** menggunakan `secret_key` yang dimuat secara aman dari berkas `.env`.
+4. **Struktur Payload:** Token memuat atribut: `user_id`, `role`, `branch_id`, dan `exp` (berlaku tepat 8 jam).
 5. **Penyimpanan Sesi:** Token yang dihasilkan akan dicatat ke dalam tabel `login_sessions` (atribut `jwt_token`, `expires_at`).
 6. **Selesai:** Pengguna diarahkan ke Menu Utama berbasis hak akses.
 
@@ -89,7 +91,7 @@ Mekanisme pencatatan audit (*audit trail*) dirancang untuk menyimpan jejak krono
 Kolom: `id`, `user_id`, `action_type`, `target_entity`, `change_detail`, `timestamp`.
 
 ### Kategori Operasi Wajib Log
-Berdasarkan aturan ACM, kelima kategori berikut wajib dicatat:
+Berdasarkan aturan ACM Bagian 10, kelima kategori berikut wajib dicatat:
 1. Transaksi Keuangan Utama (Mutasi, PPOB, Pembayaran).
 2. Jejak Autentikasi (Login dan Logout).
 3. Integritas Barang & Harga (Modifikasi inventaris, BOM, harga, stock opname).
@@ -97,24 +99,27 @@ Berdasarkan aturan ACM, kelima kategori berikut wajib dicatat:
 5. Akses Sensitif Manajerial (Aktivitas pembacaan data aset / tabungan / hutang oleh Pemilik).
 
 ### Aturan Imutabilitas (Append-Only)
-Tabel `audit_trail` berlaku absolut sebagai entitas *Append-Only* (hanya menerima `INSERT`). Kode aplikasi tidak memiliki dan tidak diizinkan menggunakan kueri `UPDATE` atau `DELETE` pada tabel ini.
+Tabel `audit_trail` berlaku absolut sebagai entitas *Append-Only* (hanya menerima `INSERT`). Kode aplikasi tidak memiliki dan tidak diizinkan mengeksekusi kueri `UPDATE` atau `DELETE` pada tabel ini.
 
 ### Implementasi Functional Programming
-Pencatatan dikelola oleh satu fungsi murni:
+Pencatatan dikelola oleh satu fungsi murni (*pure function*):
 `def log_audit(user_id: int, action_type: str, target_entity: str, change_detail: str, db_conn) -> None:`
-Fungsi ini dipanggil sebagai instruksi komplementer di setiap akhir transaksi berhasil. Format string `change_detail` distandardisasi (contoh: "UPDATE stok kertas_a4 dari 500 ke 450 (pemotongan transaksi #123)").
+Fungsi ini dipanggil sebagai instruksi komplementer di setiap akhir transaksi berhasil. Format string `change_detail` distandardisasi dan wajib spesifik. Contoh nyata format `change_detail` yang wajib diimplementasikan:
+- **Untuk Transaksi Keuangan:** `"INSERT transaksi kasir #552 dengan total Rp 150.000"`
+- **Untuk Integritas Barang (Update Stok):** `"UPDATE stok kertas_a4 dari 500 ke 450 (pemotongan HPP)"`
+- **Untuk Jejak Autentikasi:** `"LOGIN sukses untuk sesi pengguna 4 dari IP CLI terminal"`
 
 ## 7. Soft Delete Framework
 
-Dilarang keras melakukan perintah penghapusan SQL fisik (`DELETE`) pada aplikasi (kecuali tabel `login_sessions`).
-- **Skema Dasar:** Tabel master memiliki kolom `is_active BOOLEAN DEFAULT TRUE`. (Tabel lain dapat menggunakan ekuivalensi nama seperti `is_deleted = 0`).
-- **Penerapan Kueri:** Setiap rutin pembacaan (`SELECT`) wajib menyelipkan penapis aktif `WHERE is_active = TRUE` atau `WHERE is_deleted = 0`.
+Dilarang keras melakukan perintah penghapusan SQL fisik (`DELETE`) dari level aplikasi. Tabel `login_sessions` adalah **satu-satunya pengecualian** yang boleh menggunakan perintah `DELETE` secara fisik untuk menghapus token saat pengguna *logout* atau sesi kedaluwarsa.
+- **Skema Dasar:** Tabel master memiliki kolom `is_active BOOLEAN NOT NULL DEFAULT TRUE`.
+- **Penerapan Kueri:** Setiap rutin pembacaan (`SELECT`) wajib menyelipkan penapis aktif `WHERE is_active = TRUE`.
 - **Dampak:** Integritas referensial antar entitas terjaga (contoh: pegawai yang sudah berhenti datanya tetap ada untuk validasi historis BOM dan HPP di tabel riwayat transaksi).
 
 ## 8. Proteksi Brute-Force & Idle Auto-Logout
 
-- **Brute-Force Protection:** Sistem mendeteksi kegagalan *login* berturut-turut. Pada respons yang gagal, aplikasi menunda pengembalian pesan (*latency* buatan) selama 500ms. Jika mencapai ambang batas **5 kali gagal**, akun dikunci secara logikal (`is_locked = 1`). Pembukaan kunci (*unlock*) mutlak harus dilakukan oleh Pemilik melalui modul administratif.
-- **Idle Timeout:** Sistem membaca fungsi internal `time.time()` selama *prompt event loop* berjalan. Jika interaksi pengguna terhenti total selama durasi **10 menit**, sesi JWT dinonaktifkan secara sepihak, token dihapus dari memori dan `login_sessions`, dan pengguna dipaksa masuk ke layar *login* awal.
+- **Brute-Force Protection:** Sistem mendeteksi kegagalan *login* berturut-turut. Pada respons yang gagal, aplikasi menunda pengembalian pesan (*latency* buatan) secara pasti selama 500ms. Jika mencapai ambang batas **5x gagal**, akun dikunci secara logikal dengan memperbarui nilai kolom `is_active = FALSE` pada tabel `users`. Pembukaan kunci (*unlock*) mutlak harus dilakukan oleh Pemilik melalui modul administratif.
+- **Idle Timeout:** Sistem membaca fungsi internal `time.time()` selama *prompt event loop* berjalan. Jika interaksi pengguna terhenti total selama durasi tepat **10 menit**, sesi JWT dinonaktifkan secara sepihak, token dihapus dari memori dan dihapus secara fisik dari `login_sessions`, dan pengguna dipaksa masuk ke layar *login* awal.
 
 ## 9. Validasi PIN Transaksi Finansial
 
@@ -147,7 +152,7 @@ Pengendalian eksepsi dan kegagalan aplikasi harus menjaga kerahasiaan topologi i
 
 ### Isolasi Keamanan Lintas Cabang (Multi-Branch Ready)
 - Kode identitas `branch_id` diekstrak dari kredibilitas payload JWT saat pengguna aktif, tidak diizinkan berupa penyematan variabel bebas di program.
-- Semua pemanggilan kueri (terutama transaksional operasional) wajib menyelipkan klausa SQL `WHERE branch_id = ?`, membatasi tumpang-tindih atau kebocoran data antar entitas unit cabang secara absolut.
+- Semua pemanggilan kueri (terutama transaksional operasional) wajib menyelipkan klausa SQL `WHERE branch_id = ?`, membatasi tumpang-tindih atau kebocoran data antar entitas unit cabang secara absolut. Hal ini relevan dan diwajibkan tidak hanya pada kueri transaksional, tetapi juga pada filter laporan keuangan, isolasi data audit trail, dan batasan cakupan validasi PIN.
 
 ## 13. Tabel Ringkasan Klasifikasi Data & Entitas Keamanan
 
@@ -185,3 +190,4 @@ Pengendalian eksepsi dan kegagalan aplikasi harus menjaga kerahasiaan topologi i
 - `docs/sdlc/03_design/01_database_schema.sql`
 - `docs/sdlc/01_planning/04_tech_stack_decision.md`
 - `docs/sdlc/01_planning/05_innovation_proposal.md`
+- `docs/sdlc/narasi.txt`
